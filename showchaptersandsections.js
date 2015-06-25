@@ -68,7 +68,7 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
 // Adds the text for the chapter macro
 ShowChapterOrSectionMacro.prototype.outputChapters = function(chapterName) {
   // Output chapter information
-  chaptersList = "<ul>"
+  chaptersList = "<ul class=\"chapter-list\">"
 
   for (var i = 0; i < this.listOfChapters.length; i++) {
     chaptersList += "<li"
@@ -90,7 +90,7 @@ ShowChapterOrSectionMacro.prototype.outputSections = function(chapterName, secti
   // Output chapter information
   chapterSectionsArray = this.chaptersToSectionsMap.get(chapterName)
 
-  sectionsList = "<ul>"
+  sectionsList = "<ul class=\"section-list\">"
 
   for (var i = 0; i < chapterSectionsArray.length; i++) {
     sectionsList += "<li"
