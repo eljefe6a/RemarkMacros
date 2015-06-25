@@ -3,6 +3,11 @@ var SourceCreator = function () {
 
 // Downloads the sourceUrls and returns the results in Remark format
 SourceCreator.prototype.createSource = function(classJSONUrl) {
+  return createSource(classJSONUrl, false)
+}
+
+// Downloads the sourceUrls and returns the results in Remark format
+SourceCreator.prototype.createSource = function(classJSONUrl, showChapters) {
   // Download class file
   classfile = this.getFile(classJSONUrl)
   classJSON = JSON.parse(classfile)
@@ -14,7 +19,22 @@ SourceCreator.prototype.createSource = function(classJSONUrl) {
 
   // Add all modules for the class
   for (var i = 0; i < classJSON.classmodules.length; i++) {
-    source += this.getFile(classJSON.classmodules[i]);
+    fileSource = this.getFile(classJSON.classmodules[i]);
+
+    if (showChapters == true) {
+      // Add the chapters macro
+      var m;
+      var re = /template:\s+chapter\nname:\s+(.*)\n/;
+ 
+      if ((m = re.exec(fileSource)) !== null) {
+        source += "\ntemplate: chapterorsectionlist\n"
+        source += "name: Course Chapters\n"
+        source += "![:showchapters " + m[1] + "]\n"
+        source += "---\n"
+      }
+    }
+
+    source += fileSource
 
     // Files shouldn't have --- at the head or foot
     // It is added automatically here
