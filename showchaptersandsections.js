@@ -36,20 +36,24 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
 
   currentChapterName = ""
 
-  for (var i = 0; i < allLines.length; i++) {
-    // TODO: Replace with regex to ignore whitespace
-    if (allLines[i] == "template: chapter") {
-      // Verify next row is the name
-      if (allLines[i+1].startsWith("name:")) {
-        currentChapterName = allLines[i+1].split(":")[1].trim()
+  var chapterre = /template:\s+chapter\s?$/;
+  var sectionre = /template:\s+section\s?$/;
+  var namere = /name:\s+(.*)\s?$/;
+  var m;
 
-        this.listOfChapters.push(currentChapterName)
+  for (var i = 0; i < allLines.length; i++) {
+    if ((m = chapterre.exec(allLines[i])) !== null) {
+      // Verify next row is the name
+      if ((m = namere.exec(allLines[i+1])) !== null) {
+        this.listOfChapters.push(m[1])
+
+        console.dir(this.listOfChapters)
       } else {
         console.log("Couldn't find chapter name for line " + i)
       }
-    } else if (allLines[i] == "template: section") {
+    } else if ((m = sectionre.exec(allLines[i])) !== null) {
       // Verify next row is the name
-      if (allLines[i+1].startsWith("name:")) {
+      if ((m = namere.exec(allLines[i+1])) !== null) {
         chapterSectionsArray = this.chaptersToSectionsMap.get(currentChapterName)
 
         if (chapterSectionsArray == undefined) {
@@ -57,7 +61,7 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
           this.chaptersToSectionsMap.set(currentChapterName, chapterSectionsArray)
         }
 
-        chapterSectionsArray.push(allLines[i+1].split(":")[1].trim())
+        chapterSectionsArray.push(m[1])
       } else {
         console.log("Couldn't find section name for line " + i)
       }
