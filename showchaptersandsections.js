@@ -36,9 +36,9 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
 
   currentChapterName = ""
 
-  var chapterre = /template:\s+chapter\s?$/;
-  var sectionre = /template:\s+section\s?$/;
-  var namere = /name:\s+(.*)\s?$/;
+  var chapterre = /template:\s?chapter\s?$/;
+  var sectionre = /template:\s?section\s?$/;
+  var namere = /name:\s?(.*)\s?$/;
   var m;
 
   for (var i = 0; i < allLines.length; i++) {
@@ -46,8 +46,6 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
       // Verify next row is the name
       if ((m = namere.exec(allLines[i+1])) !== null) {
         this.listOfChapters.push(m[1])
-
-        console.dir(this.listOfChapters)
       } else {
         console.log("Couldn't find chapter name for line " + i)
       }
