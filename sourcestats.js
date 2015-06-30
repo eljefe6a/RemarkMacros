@@ -40,8 +40,12 @@ SourceStats.prototype.getFile = function(url) {
   return xmlhttp.responseText;
 }
 
-// Outputs timings and stats
 SourceStats.prototype.outputStats = function(slideshow, slidesPerHour) {
+  return this.outputStats(slideshow, slidesPerHour, 6.5, 1, 1)
+}
+
+// Outputs timings and stats
+SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerDay, demoMultiplier, exerciseMultiplier) {
   var slides = slideshow.getSlides()
 
   var chapters = -1;
@@ -62,7 +66,7 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour) {
       chapters++;
 
       if (chapters != 0) {
-        this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes)
+        this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay)
 
         currentSlides = 0;
         currentExerciseMinutes = 0;
@@ -76,25 +80,25 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour) {
       regular++;
       currentSlides++;
     } else if (template == "demo") {
-      var minutes = parseInt(slides[i].properties.minutes)
+      var minutes = parseInt(slides[i].properties.minutes) * demoMultiplier
       demoMinutes += minutes;
       currentDemoMinutes += minutes;
     } else if (template == "exercise") {
-      var minutes = parseInt(slides[i].properties.minutes)
+      var minutes = parseInt(slides[i].properties.minutes) * exerciseMultiplier
       exerciseMinutes += minutes;
       currentExerciseMinutes += minutes;
     }
   }
 
-  this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes)
+  this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay)
 
   console.log("Overall stats chapters:" + chapters + " sections:" + sections +
    " regular:" + regular + " demos:" + demoMinutes + " exercises:" + exerciseMinutes +
    " slidesPerHour:" + slidesPerHour)
 }
 
-SourceStats.prototype.outputChapterTime = function(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes) {
-  var toLog = this.calculateTime(regular, demoMinutes, exerciseMinutes, slidesPerHour) + 
+SourceStats.prototype.outputChapterTime = function(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay) {
+  var toLog = this.calculateTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, hoursPerDay) + 
     " Chapter " + chapters + " " + currentChapterName +
     " - " + currentSlides + " slides."
 
@@ -114,7 +118,7 @@ SourceStats.prototype.outputChapterTime = function(regular, demoMinutes, exercis
 // Calculates the current run time
 SourceStats.prototype.calculateTime = function(slides, demo, exercise, slidesPerHour) {
   var totalMinutes = ((slides / slidesPerHour) * 60) + demo + exercise
-  var hoursPerDay = 6.5
+  var hoursPerDay = 4.0
 
   var days = Math.ceil(totalMinutes / (60 * hoursPerDay))
 
