@@ -40,12 +40,21 @@ SourceStats.prototype.getFile = function(url) {
   return xmlhttp.responseText;
 }
 
-SourceStats.prototype.outputStats = function(slideshow, slidesPerHour) {
-  return this.outputStats(slideshow, slidesPerHour, 6.5, 1, 1)
-}
-
 // Outputs timings and stats
 SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerDay, demoMultiplier, exerciseMultiplier) {
+  // Check if the optional parameters are added
+  if (typeof hoursPerDay == 'undefined') {
+    hoursPerDay = 6.5
+  }
+
+  if (typeof demoMultiplier == 'undefined') {
+    demoMultiplier = 1
+  }
+
+  if (typeof exerciseMultiplier == 'undefined') {
+    exerciseMultiplier = 1
+  }
+
   var slides = slideshow.getSlides()
 
   var chapters = -1;
