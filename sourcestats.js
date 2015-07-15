@@ -125,10 +125,9 @@ SourceStats.prototype.outputChapterTime = function(regular, demoMinutes, exercis
 }
 
 // Calculates the current run time
-SourceStats.prototype.calculateTime = function(slides, demo, exercise, slidesPerHour) {
+SourceStats.prototype.calculateTime = function(slides, demo, exercise, slidesPerHour, hoursPerDay) {
   var totalMinutes = ((slides / slidesPerHour) * 60) + demo + exercise
-  var hoursPerDay = 4.0
-
+  
   var days = Math.ceil(totalMinutes / (60 * hoursPerDay))
 
   var hours = (totalMinutes - ((days - 1) * hoursPerDay * 60)) / 60
