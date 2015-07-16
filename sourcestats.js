@@ -68,6 +68,9 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
   var currentExerciseMinutes = 0;
   var currentChapterName = ""
 
+  chapterTimes = new Map()
+  chapterTimes["chapters"] = []
+
   for (var i = 0; i < slides.length; i++) {
     var template = slides[i].properties.template;
 
@@ -75,7 +78,7 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
       chapters++;
 
       if (chapters != 0) {
-        this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay)
+        chapterTimes["chapters"].push(this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay))
 
         currentSlides = 0;
         currentExerciseMinutes = 0;
@@ -99,29 +102,35 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
     }
   }
 
-  this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay)
+  chapterTimes["chapters"].push(this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay))
 
-  console.log("Overall stats chapters:" + chapters + " sections:" + sections +
-   " regular:" + regular + " demos:" + demoMinutes + " exercises:" + exerciseMinutes +
-   " slidesPerHour:" + slidesPerHour)
+  chapterTimes["total"] = {
+    "totalchapters": chapters,
+    "totalsections": sections,
+    "totalregular": regular,
+    "totaldemos": demoMinutes,
+    "totalexercises": exerciseMinutes,
+    "slidesperhour": slidesPerHour
+  }
+
+  this.displayChapters(chapterTimes)
 }
 
 SourceStats.prototype.outputChapterTime = function(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay) {
-  var toLog = this.calculateTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, hoursPerDay) + 
-    " Chapter " + chapters + " " + currentChapterName +
-    " - " + currentSlides + " slides."
+  chapterTime = this.calculateTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, hoursPerDay)
 
-  if (currentExerciseMinutes != 0) {
-    toLog += " " + currentExerciseMinutes + " minutes of exercises."
+  chapterMap = {
+    "overallruntimedays": chapterTime[0],
+    "overallruntimeminutes": chapterTime[1],
+    "chapter": chapters,
+    "chaptername": currentChapterName,
+    "chapterslides": currentSlides,
+    "chapterexerciseminutes": currentExerciseMinutes,
+    "chapterdemominutes": currentDemoMinutes,
+    "chaptertotaltime": ((currentSlides * (60 / slidesPerHour)) + currentExerciseMinutes + currentDemoMinutes).toFixed()
   }
 
-  if (currentDemoMinutes != 0) {
-    toLog += " " + currentDemoMinutes + " minutes of demos."
-  }
-
-  toLog += " Total chapter time: " + ((currentSlides * (60 / slidesPerHour)) + currentExerciseMinutes + currentDemoMinutes).toFixed(0) + " minutes."
-
-  console.log(toLog)
+  return chapterMap
 }
 
 // Calculates the current run time
@@ -130,7 +139,52 @@ SourceStats.prototype.calculateTime = function(slides, demo, exercise, slidesPer
   
   var days = Math.ceil(totalMinutes / (60 * hoursPerDay))
 
-  var hours = (totalMinutes - ((days - 1) * hoursPerDay * 60)) / 60
+  var minutes = (totalMinutes - ((days - 1) * hoursPerDay * 60)).toFixed()
 
-  return "Day " + days + " " + hours.toFixed(2) + " hours"
+  return [days, minutes]
+}
+
+SourceStats.prototype.toHHMM = function(minutes) {
+  realMinutes = minutes % 60
+  hours = (minutes - realMinutes) / 60
+
+  return this.pad(hours, 1) + ":" + this.pad(realMinutes, 2)
+}
+
+SourceStats.prototype.pad = function(value, length) {
+    return (value.toString().length < length) ? this.pad("0"+value, length):value;
+}
+
+SourceStats.prototype.displayChapters = function(chapterTimes) {
+  slidesPerMinute = 60 / chapterTimes["total"]["slidesperhour"]
+
+  html = ""
+
+  for (var i = 0; i < chapterTimes["chapters"].length; i++) {
+    totalSlideTime = chapterTimes["chapters"][i]["chapterslides"] * slidesPerMinute
+
+    html += chapterTimes["chapters"][i]["chaptername"]
+    html += " D" + chapterTimes["chapters"][i]["overallruntimedays"] + " " + this.toHHMM(chapterTimes["chapters"][i]["overallruntimeminutes"])
+    html += "     " + chapterTimes["chapters"][i]["chapterslides"]
+    html += " " + this.toHHMM(chapterTimes["chapters"][i]["chaptertotaltime"])
+    html += " " + this.toHHMM(totalSlideTime.toFixed())
+    html += " " + this.toHHMM(chapterTimes["chapters"][i]["chapterexerciseminutes"])
+    html += " " + this.toHHMM(chapterTimes["chapters"][i]["chapterdemominutes"]) + "\n"
+  }
+
+  slidesPerMinute = 60 / chapterTimes["total"]["slidesperhour"]
+  totalSlideTime = chapterTimes["total"]["totalregular"] * slidesPerMinute
+  totalCourseTime = totalSlideTime + chapterTimes["total"]["totaldemos"] + chapterTimes["total"]["totalexercises"]
+
+  html += "\n\n"
+
+  html += "Total Time: " + this.toHHMM(totalCourseTime.toFixed()) + "\n"
+  html += "Total Slides: " + chapterTimes["total"]["totalregular"] + "\n"
+  html += "Total Slide Time: " + this.toHHMM(totalSlideTime.toFixed()) + "\n"
+  html += "Total Demos: " + this.toHHMM(chapterTimes["total"]["totaldemos"]) + "\n"
+  html += "Total Exercises: " + this.toHHMM(chapterTimes["total"]["totalexercises"]) + "\n"
+
+  html += (((chapterTimes["total"]["totaldemos"] + chapterTimes["total"]["totalexercises"]) / totalCourseTime) * 100).toFixed(1) + "% of class time is exercises/demos"
+
+  console.log(html)
 }
