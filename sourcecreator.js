@@ -7,39 +7,49 @@ var SourceCreator = function () {
 };
 
 // Downloads the sourceUrls and returns the results in Remark format
-SourceCreator.prototype.createSource = function(classJSONUrl) {
+SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction) {
   return createSource(classJSONUrl, false)
 }
 
 // Downloads the sourceUrls and returns the results in Remark format
-SourceCreator.prototype.createSource = function(classJSONUrl, showChapters) {
+SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, showChapters) {
   // Download class file
-  classfile = this.getFile(classJSONUrl)
-  classJSON = JSON.parse(classfile)
+  this.getFile(classJSONUrl, function(classfile) {
+    classJSON = JSON.parse(classfile)
 
-  // Set the class title
-  document.title = classJSON.classname
+    // Set the class title
+    document.title = classJSON.classname
 
-  var source = ""
+    var source = ""
+    classJSON.ajaxCall = []
 
-  // Add all modules for the class
-  for (var i = 0; i < classJSON.classmodules.length; i++) {
-    fileSource = this.getFile(classJSON.classmodules[i]);
-
-    if (showChapters == true) {
-      source += this.addChapterOrSectionList(fileSource)
+    // Download all modules
+    for (var i = 0; i < classJSON.classmodules.length; i++) {
+      classJSON.ajaxCall[i] = $.get(classJSON.classmodules[i]);
     }
 
-    source += this.importModule(fileSource, classJSON.classmodules[i])
+    // Add all modules for the class
+    $.when.apply($, classJSON.ajaxCall).done(function() {
+      for (var i = 0; i < classJSON.classmodules.length; i++) {
+        fileSource = classJSON.ajaxCall[i].responseText
 
-    // Files shouldn't have --- at the head or foot
-    // It is added automatically here
-    if (i + 1 < classJSON.classmodules.length) {
-      source += "\n---\n"
-    }
-  };
+        if (showChapters == true) {
+          source += SourceCreator.prototype.addChapterOrSectionList(fileSource)
+        }
 
-  return source
+        source += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i])
+
+        // Files shouldn't have --- at the head or foot
+        // It is added automatically here
+        if (i + 1 < classJSON.classmodules.length) {
+          source += "\n---\n"
+        }
+      }
+
+      // All modules downloaded, callback to function that we're done
+      callbackfunction(source)
+    })
+  })
 }
 
 SourceCreator.prototype.importModule = function(fileSource, moduleFileName) {
@@ -50,7 +60,14 @@ SourceCreator.prototype.importModule = function(fileSource, moduleFileName) {
   // Keep on running Regex until all includemodule are replaced
   // with their module contents
   while ((m = re.exec(fileSource)) !== null) {
-    fileSource = fileSource.replace(m[0], this.getFile(m[1]))
+    var ajaxCall = $.get(m[1]);
+
+    $.when(ajaxCall).done(function() {
+      console.log("When called")
+      
+      log.console(m[1] + " " + ajaxCall.responseText)
+      fileSource = fileSource.replace(m[0], ajaxCall.responseText)
+    });
 
     console.log("Importing module: " + m[1] + " for " + moduleFileName)
   }
@@ -75,16 +92,13 @@ SourceCreator.prototype.addChapterOrSectionList = function(fileSource) {
   return ""
 }
 
-SourceCreator.prototype.getFile = function(url) {
-  var xmlhttp = new XMLHttpRequest();
-
-  xmlhttp.open('GET', url, false);
-  xmlhttp.send();
-
-  if (xmlhttp.status != 200) {
-    console.log(url + " could not be found and added to source.")
-    return ""
-  }
-
-  return xmlhttp.responseText;
+SourceCreator.prototype.getFile = function(url, callbackfunction) {
+  var jqxhr = $.ajax(url)
+  .done(function() {
+    callbackfunction(jqxhr.responseText)
+  })
+  .fail(function() {
+    console.log(url + " could not be found and added to source. Status code:" + 
+      xmlhttp.status + " Response:\n\"" + xmlhttp.responseText + "\"")
+  });
 }
