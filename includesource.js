@@ -57,16 +57,7 @@ IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLine
   fileExtension = this.getFileExtension(filename)
   output = "```" + fileExtension + "\n"
 
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.open('GET', filename, false);
-  xmlhttp.send();
-
-  if (xmlhttp.status != 200) {
-    console.log(filename + " could not be found.")
-    return "File Not Found!"
-  }
-
-  fileSource = xmlhttp.responseText;
+  fileSource = IncludeSourceMacro.prototype.downloadFile(filename);
 
   var fileSplit = fileSource.split("\n")
 
@@ -125,6 +116,20 @@ IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLine
   output += "```"
 
   return output;
+}
+
+// Downloads the file
+IncludeSourceMacro.prototype.downloadFile = function(filename) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open('GET', filename, false);
+  xmlhttp.send();
+
+  if (xmlhttp.status != 200) {
+    console.log(filename + " could not be found.")
+    return "File Not Found!"
+  }
+
+  return xmlhttp.responseText;
 }
 
 // Downloads the file, adds the lines, and highlights the lines
