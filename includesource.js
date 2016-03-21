@@ -120,16 +120,8 @@ IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLine
 
 // Downloads the file
 IncludeSourceMacro.prototype.downloadFile = function(filename) {
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.open('GET', filename, false);
-  xmlhttp.send();
-
-  if (xmlhttp.status != 200) {
-    console.log(filename + " could not be found.")
-    return "File Not Found!"
-  }
-
-  return xmlhttp.responseText;
+  var jqxhr = $.ajax({url: filename, async:false})
+  return jqxhr.responseText;
 }
 
 // Downloads the file, adds the lines, and highlights the lines
