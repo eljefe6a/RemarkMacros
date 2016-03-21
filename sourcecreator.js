@@ -11,7 +11,7 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction) 
   return createSource(classJSONUrl, false)
 }
 
-// Downloads the sourceUrls and returns the results in Remark format
+// Downloads the sourceUrls and calls the second step
 SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, showChapters) {
   // Download class file
   this.getFile(classJSONUrl, function(classfile) {
@@ -34,6 +34,7 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, 
   })
 }
 
+// Second step that goes through and downloads all modules.
 SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunction, showChapters) {
   allModuleAjaxCalls = []
   classJSON.modules = {}
@@ -51,6 +52,7 @@ SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunctio
   })
 }
 
+// Goes through all source and downloads the modules.
 SourceCreator.prototype.downloadModule = function(classJSON, fileSource, moduleFileName) {
   // Import any includemodule
   var m;
@@ -73,6 +75,7 @@ SourceCreator.prototype.downloadModule = function(classJSON, fileSource, moduleF
   return ajaxCalls
 }
 
+// The final step in the callback hell. Adds modules.
 SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, showChapters) {
   var source = ""
 
@@ -96,6 +99,7 @@ SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, s
   callbackfunction(source)
 }
 
+// Now that file is downloaded, replaces includemodule with the module
 SourceCreator.prototype.importModule = function(fileSource, moduleFileName, classJSON) {
   // Import any includemodule
   var m;
