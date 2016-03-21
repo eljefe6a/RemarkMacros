@@ -20,7 +20,6 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, 
     // Set the class title
     document.title = classJSON.classname
 
-    var source = ""
     classJSON.ajaxCall = []
 
     // Download all modules
@@ -30,29 +29,74 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, 
 
     // Add all modules for the class
     $.when.apply($, classJSON.ajaxCall).done(function() {
-      for (var i = 0; i < classJSON.classmodules.length; i++) {
-        fileSource = classJSON.ajaxCall[i].responseText
-
-        if (showChapters == true) {
-          source += SourceCreator.prototype.addChapterOrSectionList(fileSource)
-        }
-
-        source += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i])
-
-        // Files shouldn't have --- at the head or foot
-        // It is added automatically here
-        if (i + 1 < classJSON.classmodules.length) {
-          source += "\n---\n"
-        }
-      }
-
-      // All modules downloaded, callback to function that we're done
-      callbackfunction(source)
+      SourceCreator.prototype.downloadAllModules(classJSON, callbackfunction, showChapters)
     })
   })
 }
 
-SourceCreator.prototype.importModule = function(fileSource, moduleFileName) {
+SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunction, showChapters) {
+  allModuleAjaxCalls = []
+  classJSON.modules = {}
+
+  for (var i = 0; i < classJSON.classmodules.length; i++) {
+    fileSource = classJSON.ajaxCall[i].responseText
+    
+    // Concat that module's Ajax calls together
+    ajaxCalls = SourceCreator.prototype.downloadModule(classJSON, fileSource, classJSON.classmodules[i])
+    allModuleAjaxCalls = allModuleAjaxCalls.concat(ajaxCalls)
+  }
+
+  $.when.apply($, allModuleAjaxCalls).done(function() {
+    SourceCreator.prototype.finalizeSource(classJSON, callbackfunction, showChapters)
+  })
+}
+
+SourceCreator.prototype.downloadModule = function(classJSON, fileSource, moduleFileName) {
+  // Import any includemodule
+  var m;
+  var re = /!\[:includemodule (.*)\]\n/g;
+
+  ajaxCalls = []
+  
+  classJSON.modules[moduleFileName] = {}
+  classJSON.modules[moduleFileName].file = {}
+
+  // Keep on running Regex until all includemodule are found
+  while ((m = re.exec(fileSource)) !== null) {
+    ajaxCall = $.get(m[1])
+    ajaxCalls.push(ajaxCall)
+    classJSON.modules[moduleFileName].file[m[1]] = ajaxCall;
+
+    console.log("Importing module: " + m[1] + " for " + moduleFileName)
+  }
+
+  return ajaxCalls
+}
+
+SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, showChapters) {
+  var source = ""
+
+  for (var i = 0; i < classJSON.classmodules.length; i++) {
+    fileSource = classJSON.ajaxCall[i].responseText
+
+    if (showChapters == true) {
+      source += SourceCreator.prototype.addChapterOrSectionList(fileSource)
+    }
+
+    source += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i], classJSON)
+
+    // Files shouldn't have --- at the head or foot
+    // It is added automatically here
+    if (i + 1 < classJSON.classmodules.length) {
+      source += "\n---\n"
+    }
+  }
+
+  // All modules downloaded, callback to function that we're done
+  callbackfunction(source)
+}
+
+SourceCreator.prototype.importModule = function(fileSource, moduleFileName, classJSON) {
   // Import any includemodule
   var m;
   var re = /!\[:includemodule (.*)\]\n/;
@@ -60,16 +104,7 @@ SourceCreator.prototype.importModule = function(fileSource, moduleFileName) {
   // Keep on running Regex until all includemodule are replaced
   // with their module contents
   while ((m = re.exec(fileSource)) !== null) {
-    var ajaxCall = $.get(m[1]);
-
-    $.when(ajaxCall).done(function() {
-      console.log("When called")
-      
-      log.console(m[1] + " " + ajaxCall.responseText)
-      fileSource = fileSource.replace(m[0], ajaxCall.responseText)
-    });
-
-    console.log("Importing module: " + m[1] + " for " + moduleFileName)
+    fileSource = fileSource.replace(m[0], classJSON.modules[moduleFileName].file[m[1]].responseText)
   }
 
   return fileSource
