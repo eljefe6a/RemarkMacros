@@ -12,7 +12,6 @@ The selected section will use the selected-section CSS class.
 
 //ShowChapterOrSectionMacro.prototype.listOfChapters = []
 
-
 var ShowChapterOrSectionMacro = function (source) {
   var includeSourceMacro = this
 
@@ -25,10 +24,10 @@ var ShowChapterOrSectionMacro = function (source) {
   };
 
   console.log("Added ShowChapterOrSection macros")
-
-  this.chaptersToSectionsMap = new Map()
-  this.listOfChapters = new Array()
 };
+
+ShowChapterOrSectionMacro.prototype.chaptersToSectionsMap = {};
+ShowChapterOrSectionMacro.prototype.listOfChapters = [];
 
 ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
   
@@ -45,18 +44,18 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
     if ((m = chapterre.exec(allLines[i])) !== null) {
       // Verify next row is the name
       if ((m = namere.exec(allLines[i+1])) !== null) {
-        this.listOfChapters.push(m[1])
+        ShowChapterOrSectionMacro.prototype.listOfChapters.push(m[1])
       } else {
         console.log("Couldn't find chapter name for line " + i)
       }
     } else if ((m = sectionre.exec(allLines[i])) !== null) {
       // Verify next row is the name
       if ((m = namere.exec(allLines[i+1])) !== null) {
-        chapterSectionsArray = this.chaptersToSectionsMap.get(currentChapterName)
+        chapterSectionsArray = ShowChapterOrSectionMacro.prototype.chaptersToSectionsMap[currentChapterName]
 
         if (chapterSectionsArray == undefined) {
           chapterSectionsArray = []
-          this.chaptersToSectionsMap.set(currentChapterName, chapterSectionsArray)
+          ShowChapterOrSectionMacro.prototype.chaptersToSectionsMap[currentChapterName] = chapterSectionsArray
         }
 
         chapterSectionsArray.push(m[1])
@@ -72,14 +71,14 @@ ShowChapterOrSectionMacro.prototype.outputChapters = function(chapterName) {
   // Output chapter information
   chaptersList = "<ul class=\"chapter-list\">"
 
-  for (var i = 0; i < this.listOfChapters.length; i++) {
+  for (var i = 0; i < ShowChapterOrSectionMacro.prototype.listOfChapters.length; i++) {
     chaptersList += "<li"
 
-    if (this.listOfChapters[i] == chapterName) {
+    if (ShowChapterOrSectionMacro.prototype.listOfChapters[i] == chapterName) {
       chaptersList += " class=\"selected-chapter\""
     }
 
-    chaptersList += ">" + this.listOfChapters[i] + "</li>"
+    chaptersList += ">" + ShowChapterOrSectionMacro.prototype.listOfChapters[i] + "</li>"
   }
 
   chaptersList += "</ul>"
@@ -90,7 +89,7 @@ ShowChapterOrSectionMacro.prototype.outputChapters = function(chapterName) {
 // Adds the text for the section macro
 ShowChapterOrSectionMacro.prototype.outputSections = function(chapterName, sectionName) {
   // Output chapter information
-  chapterSectionsArray = this.chaptersToSectionsMap.get(chapterName)
+  chapterSectionsArray = ShowChapterOrSectionMacro.prototype.chaptersToSectionsMap.get(chapterName)
 
   sectionsList = "<ul class=\"section-list\">"
 

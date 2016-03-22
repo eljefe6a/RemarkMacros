@@ -68,7 +68,7 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
   var currentExerciseMinutes = 0;
   var currentChapterName = ""
 
-  chapterTimes = new Map()
+  chapterTimes = {}
   chapterTimes["chapters"] = []
 
   for (var i = 0; i < slides.length; i++) {
