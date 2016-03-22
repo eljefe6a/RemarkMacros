@@ -1,13 +1,13 @@
 /*
 In the Markdown:
 
-![:includesource "Class.java"]
+![:includesource Class.java]
 Will include Class.java with source code and add the code block with the file extension "java"
 
-![:includesource "Class.java", 2-4, 3, *]
+![:includesource Class.java, 2-4, 3, *]
 Will include lines 2 to 4 from Class.java and highlight line 3 with an *
 
-![:includesource "Class.java", 2-4, 3 4, * trim]
+![:includesource Class.java, 2-4, 3 4, * trim]
 Will include lines 2 to 4 from Class.java and highlight lines 3 and 4 with an * then trim the whitespace to the minimum needed for lines 2 to 4.
 */
 var IncludeSourceMacro = function () {
@@ -57,7 +57,8 @@ IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLine
   fileExtension = this.getFileExtension(filename)
   output = "```" + fileExtension + "\n"
 
-  fileSource = IncludeSourceMacro.prototype.downloadFile(filename);
+  // File already downloaded, get it out of memory
+  fileSource = IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].responseText;
 
   var fileSplit = fileSource.split("\n")
 
@@ -116,12 +117,6 @@ IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLine
   output += "```"
 
   return output;
-}
-
-// Downloads the file
-IncludeSourceMacro.prototype.downloadFile = function(filename) {
-  var jqxhr = $.ajax({url: filename, async:false})
-  return jqxhr.responseText;
 }
 
 // Downloads the file, adds the lines, and highlights the lines
@@ -212,3 +207,37 @@ IncludeSourceMacro.prototype.range = function(start, stop, step){
   };
   return result;
 };
+
+// Map of URL to ajax call object
+IncludeSourceMacro.prototype.allIncludeAjaxCalls = {};
+
+// First step that goes through and downloads all includes.
+IncludeSourceMacro.prototype.downloadAllIncludes = function(source, callbackfunction) {
+  ajaxCalls = IncludeSourceMacro.prototype.downloadIncludes(source)
+  
+  $.when.apply($, ajaxCalls).done(function() {
+    callbackfunction()
+  })
+}
+
+// Goes through all source and downloads the includes.
+IncludeSourceMacro.prototype.downloadIncludes = function(source) {
+  // Import any includemodule
+  var m;
+  var re = /!\[:includesource (.*?)[\],]/g;
+
+  ajaxCalls = []
+
+  // Keep on running Regex until all includesource are found
+  while ((m = re.exec(source)) !== null) {
+    // See if the file was already downloaded
+    if (!(m[1] in IncludeSourceMacro.prototype.allIncludeAjaxCalls)) {
+      ajaxCall = $.get(m[1])
+
+      ajaxCalls.push(ajaxCall)
+      IncludeSourceMacro.prototype.allIncludeAjaxCalls[m[1]] = ajaxCall
+    }
+  }
+
+  return ajaxCalls
+}
