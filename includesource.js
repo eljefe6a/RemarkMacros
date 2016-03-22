@@ -232,7 +232,10 @@ IncludeSourceMacro.prototype.downloadIncludes = function(source) {
   while ((m = re.exec(source)) !== null) {
     // See if the file was already downloaded
     if (!(m[1] in IncludeSourceMacro.prototype.allIncludeAjaxCalls)) {
-      ajaxCall = $.get(m[1])
+      ajaxCall = $.ajax({
+        url: m[1],
+        cache: false
+      })
 
       ajaxCalls.push(ajaxCall)
       IncludeSourceMacro.prototype.allIncludeAjaxCalls[m[1]] = ajaxCall

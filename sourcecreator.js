@@ -24,7 +24,10 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, 
 
     // Download all modules
     for (var i = 0; i < classJSON.classmodules.length; i++) {
-      classJSON.ajaxCall[i] = $.get(classJSON.classmodules[i]);
+      classJSON.ajaxCall[i] = $.ajax({
+      url: classJSON.classmodules[i],
+      cache: false
+      })
     }
 
     // Add all modules for the class
@@ -65,7 +68,10 @@ SourceCreator.prototype.downloadModule = function(classJSON, fileSource, moduleF
 
   // Keep on running Regex until all includemodule are found
   while ((m = re.exec(fileSource)) !== null) {
-    ajaxCall = $.get(m[1])
+    ajaxCall = $.ajax({
+    url: m[1],
+    cache: false
+    })
     ajaxCalls.push(ajaxCall)
     classJSON.modules[moduleFileName].file[m[1]] = ajaxCall;
 
@@ -132,7 +138,10 @@ SourceCreator.prototype.addChapterOrSectionList = function(fileSource) {
 }
 
 SourceCreator.prototype.getFile = function(url, callbackfunction) {
-  var jqxhr = $.ajax(url)
+  var jqxhr = $.ajax({
+  url: url,
+  cache: false
+  })
   .done(function() {
     callbackfunction(jqxhr.responseText)
   })
