@@ -50,21 +50,29 @@ IncludeSourceMacro.prototype.addFile = function(filename,includeLineNumbers,high
   return this.processIncludeLine(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace)
 }
 
-// Downloads the file, adds the lines, and highlights the lines
+// Does some initial checking on the file and either adds an error
+// or the source code
 IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace) {
+  // Check if the file was downloaded correctly
+  if (IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].statusText != "OK") {
+    // It wasn't downloaded correctly. Change the text to
+    // JQuery's string of the error
+    return "```\n" + IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].statusText + "\n```"
+  } else {
+    // It was downloaded correctly, add the source code
+    return this.handleIncludeLine(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace)
+  }
+}
+
+// Adds the lines, and highlights the lines
+IncludeSourceMacro.prototype.handleIncludeLine = function(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace) {
   currentLineNumber = 1
 
   fileExtension = this.getFileExtension(filename)
   output = "```" + fileExtension + "\n"
 
   // File already downloaded, get it out of memory
-  fileSource = IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].responseText;
-
-  // Check if the file source exists. It could have been
-  // a 404 and wasn't downloaded
-  if (typeof fileSource == 'undefined') {
-    fileSource = "Not Found"
-  }
+  var fileSource = IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].responseText;
 
   var fileSplit = fileSource.split("\n")
 
@@ -222,7 +230,7 @@ IncludeSourceMacro.prototype.downloadAllIncludes = function(source, callbackfunc
   ajaxCalls = IncludeSourceMacro.prototype.downloadIncludes(source)
   
   // Always continue, even if the Ajax calls fail
-  $.when.apply($, ajaxCalls).always(function() {
+  ajaxCalls.then(function() {
     callbackfunction()
   });
 }
@@ -250,7 +258,7 @@ IncludeSourceMacro.prototype.downloadIncludes = function(source) {
           jqXHR.url = settings.originalUrl;
         }
       }).fail(function(jqxhr, textStatus, errorThrown) {
-        console.log("Source file: " + jqxhr.url + " could not be found and added to source. Status code:" + 
+        console.log("Source file: " + jqxhr.url + " could not be found and added to map of all source code. Status code:" + 
           jqxhr.status)
       })
 
@@ -259,5 +267,22 @@ IncludeSourceMacro.prototype.downloadIncludes = function(source) {
     }
   }
 
-  return ajaxCalls
+  return IncludeSourceMacro.prototype.some(ajaxCalls)
+}
+
+// From http://stackoverflow.com/a/23625847
+IncludeSourceMacro.prototype.some = function(promises) {
+  var d = $.Deferred(), results = [];
+  var remaining = promises.length;
+  for(var i = 0; i < promises.length; i++){
+      promises[i].then(function(res){
+          results.push(res); // on success, add to results
+      }).always(function(res){
+          remaining--; // always mark as finished
+          if(!remaining) {
+            d.resolve(results);
+          }
+      })
+  }
+  return d.promise(); // return a promise on the remaining values
 }
