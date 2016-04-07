@@ -60,6 +60,12 @@ IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLine
   // File already downloaded, get it out of memory
   fileSource = IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].responseText;
 
+  // Check if the file source exists. It could have been
+  // a 404 and wasn't downloaded
+  if (typeof fileSource == 'undefined') {
+    fileSource = "Not Found"
+  }
+
   var fileSplit = fileSource.split("\n")
 
   if (shouldTrimWhitespace == true) {
@@ -215,9 +221,10 @@ IncludeSourceMacro.prototype.allIncludeAjaxCalls = {};
 IncludeSourceMacro.prototype.downloadAllIncludes = function(source, callbackfunction) {
   ajaxCalls = IncludeSourceMacro.prototype.downloadIncludes(source)
   
-  $.when.apply($, ajaxCalls).done(function() {
+  // Always continue, even if the Ajax calls fail
+  $.when.apply($, ajaxCalls).always(function() {
     callbackfunction()
-  })
+  });
 }
 
 // Goes through all source and downloads the includes.
@@ -231,14 +238,24 @@ IncludeSourceMacro.prototype.downloadIncludes = function(source) {
   // Keep on running Regex until all includesource are found
   while ((m = re.exec(source)) !== null) {
     // See if the file was already downloaded
-    if (!(m[1] in IncludeSourceMacro.prototype.allIncludeAjaxCalls)) {
+    sourceFilePath = m[1]
+
+    if (!(sourceFilePath in IncludeSourceMacro.prototype.allIncludeAjaxCalls)) {
       ajaxCall = $.ajax({
-        url: m[1],
-        cache: false
+        url: sourceFilePath,
+        originalUrl: sourceFilePath,
+        cache: false,
+        beforeSend: function(jqXHR, settings) {
+          // Add the URL so it can be accessed during an error
+          jqXHR.url = settings.originalUrl;
+        }
+      }).fail(function(jqxhr, textStatus, errorThrown) {
+        console.log("Source file: " + jqxhr.url + " could not be found and added to source. Status code:" + 
+          jqxhr.status)
       })
 
       ajaxCalls.push(ajaxCall)
-      IncludeSourceMacro.prototype.allIncludeAjaxCalls[m[1]] = ajaxCall
+      IncludeSourceMacro.prototype.allIncludeAjaxCalls[sourceFilePath] = ajaxCall
     }
   }
 

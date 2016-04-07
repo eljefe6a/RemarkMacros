@@ -147,6 +147,6 @@ SourceCreator.prototype.getFile = function(url, callbackfunction) {
   })
   .fail(function() {
     console.log(url + " could not be found and added to source. Status code:" + 
-      xmlhttp.status + " Response:\n\"" + xmlhttp.responseText + "\"")
+      jqxhr.status + " Response:\n\"" + jqxhr.responseText + "\"")
   });
 }
