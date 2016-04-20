@@ -229,10 +229,18 @@ IncludeSourceMacro.prototype.allIncludeAjaxCalls = {};
 IncludeSourceMacro.prototype.downloadAllIncludes = function(source, callbackfunction) {
   ajaxCalls = IncludeSourceMacro.prototype.downloadIncludes(source)
   
-  // Always continue, even if the Ajax calls fail
-  ajaxCalls.then(function() {
+  if (ajaxCalls === undefined) {
+    // There weren't any Ajax calls in the source.
+    // Run the callback now
     callbackfunction()
-  });
+  } else {
+    // There were Ajax calls. Wait for them to finish and
+    // then callback. Always continue, even if the Ajax 
+    // calls fail.
+    ajaxCalls.then(function() {
+      callbackfunction()
+    });
+  }
 }
 
 // Goes through all source and downloads the includes.
@@ -284,5 +292,13 @@ IncludeSourceMacro.prototype.some = function(promises) {
           }
       })
   }
-  return d.promise(); // return a promise on the remaining values
+
+  if (promises.length == 0) {
+    // There weren't any Ajax calls in the source.
+    // Return undefined to show nothing is promised.
+    return undefined;
+  } else {
+    // There were Ajax calls. Return a promise on the remaining values
+    return d.promise();
+  }
 }
