@@ -12,7 +12,7 @@ SlidesToThreeLevel.prototype.outputThreeLevel = function(slideshow, outputDiv) {
     var template = slides[i].properties.template;
     var slideName = slides[i].properties.name;
 
-    if (template == "chapter") {
+    if (template == "chapter" || template == "title") {
       output += slideName + "\n"
     } else if (template == "section") {
       output += "  " + slideName + "\n"
