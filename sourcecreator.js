@@ -12,7 +12,7 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction) 
 }
 
 // Downloads the sourceUrls and calls the second step
-SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, showChapters) {
+SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, showChapters, showSections) {
   // Download class file
   this.getFile(classJSONUrl, function(classfile) {
     classJSON = JSON.parse(classfile)
@@ -32,13 +32,13 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, 
 
     // Add all modules for the class
     $.when.apply($, classJSON.ajaxCall).done(function() {
-      SourceCreator.prototype.downloadAllModules(classJSON, callbackfunction, showChapters)
+      SourceCreator.prototype.downloadAllModules(classJSON, callbackfunction, showChapters, showSections)
     })
   })
 }
 
 // Second step that goes through and downloads all modules.
-SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunction, showChapters) {
+SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunction, showChapters, showSections) {
   allModuleAjaxCalls = []
   classJSON.modules = {}
 
@@ -51,7 +51,7 @@ SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunctio
   }
 
   $.when.apply($, allModuleAjaxCalls).done(function() {
-    SourceCreator.prototype.finalizeSource(classJSON, callbackfunction, showChapters)
+    SourceCreator.prototype.finalizeSource(classJSON, callbackfunction, showChapters, showSections)
   })
 }
 
@@ -82,7 +82,7 @@ SourceCreator.prototype.downloadModule = function(classJSON, fileSource, moduleF
 }
 
 // The final step in the callback hell. Adds modules.
-SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, showChapters) {
+SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, showChapters, showSections) {
   var source = ""
 
   for (var i = 0; i < classJSON.classmodules.length; i++) {
@@ -96,7 +96,9 @@ SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, s
 
     moduleSource += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i], classJSON)
 
-    moduleSource = SourceCreator.prototype.addSections(moduleSource, classJSON.classmodules[i], classJSON)
+    if (showSections == true) {
+      moduleSource = SourceCreator.prototype.addSections(moduleSource, classJSON.classmodules[i], classJSON)
+    }
 
     // Files shouldn't have --- at the head or foot
     // It is added automatically here
@@ -135,7 +137,7 @@ SourceCreator.prototype.addSections = function(fileSource, moduleFileName, class
 
   var fileSource = fileSource.replace(re, function myFunction(match, group1) {
     source = match + "\ntemplate: chapterorsectionlist\n"
-    source += "name: Chapter Sections\n"
+    source += "name: " + group1 + " Sections\n"
     source += "![:showsections " + SourceCreator.prototype.currentChapter + ", " + group1 + "]\n"
     // Don't need to add a --- because the source of the regex already has one
     //source += "---\n"
