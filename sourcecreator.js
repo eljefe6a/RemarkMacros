@@ -88,18 +88,26 @@ SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, s
   for (var i = 0; i < classJSON.classmodules.length; i++) {
     fileSource = classJSON.ajaxCall[i].responseText
 
+    moduleSource = ""
+
     if (showChapters == true) {
-      source += SourceCreator.prototype.addChapterOrSectionList(fileSource)
+      moduleSource += SourceCreator.prototype.addChapters(fileSource)
     }
 
-    source += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i], classJSON)
+    moduleSource += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i], classJSON)
+
+    moduleSource = SourceCreator.prototype.addSections(moduleSource, classJSON.classmodules[i], classJSON)
 
     // Files shouldn't have --- at the head or foot
     // It is added automatically here
     if (i + 1 < classJSON.classmodules.length) {
-      source += "\n---\n"
+      moduleSource += "\n---\n"
     }
+
+    source += moduleSource
   }
+
+  //console.log(source)
 
   // All modules downloaded, callback to function that we're done
   callbackfunction(source)
@@ -120,7 +128,27 @@ SourceCreator.prototype.importModule = function(fileSource, moduleFileName, clas
   return fileSource
 }
 
-SourceCreator.prototype.addChapterOrSectionList = function(fileSource) {
+// Create sections
+SourceCreator.prototype.addSections = function(fileSource, moduleFileName, classJSON) {
+  // Add the section macro
+  re = /template:\s+section\nname:\s+(.*)\n/g;
+
+  var fileSource = fileSource.replace(re, function myFunction(match, group1) {
+    source = match + "\ntemplate: chapterorsectionlist\n"
+    source += "name: Chapter Sections\n"
+    source += "![:showsections " + SourceCreator.prototype.currentChapter + ", " + group1 + "]\n"
+    // Don't need to add a --- because the source of the regex already has one
+    //source += "---\n"
+
+    return source;
+  });
+
+  return fileSource
+}
+
+SourceCreator.prototype.currentChapter = ""
+
+SourceCreator.prototype.addChapters = function(fileSource) {
   // Add the chapters macro
   var m;
   var re = /template:\s+chapter\nname:\s+(.*)\n/;
@@ -130,6 +158,8 @@ SourceCreator.prototype.addChapterOrSectionList = function(fileSource) {
     source += "name: Course Chapters\n"
     source += "![:showchapters " + m[1] + "]\n"
     source += "---\n"
+
+    SourceCreator.prototype.currentChapter = m[1]
 
     return source;
   }

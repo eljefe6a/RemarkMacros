@@ -44,6 +44,7 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
     if ((m = chapterre.exec(allLines[i])) !== null) {
       // Verify next row is the name
       if ((m = namere.exec(allLines[i+1])) !== null) {
+        currentChapterName = m[1]
         ShowChapterOrSectionMacro.prototype.listOfChapters.push(m[1])
       } else {
         console.log("Couldn't find chapter name for line " + i)
@@ -57,7 +58,7 @@ ShowChapterOrSectionMacro.prototype.parseSource = function(source) {
           chapterSectionsArray = []
           ShowChapterOrSectionMacro.prototype.chaptersToSectionsMap[currentChapterName] = chapterSectionsArray
         }
-
+        
         chapterSectionsArray.push(m[1])
       } else {
         console.log("Couldn't find section name for line " + i)
@@ -89,7 +90,7 @@ ShowChapterOrSectionMacro.prototype.outputChapters = function(chapterName) {
 // Adds the text for the section macro
 ShowChapterOrSectionMacro.prototype.outputSections = function(chapterName, sectionName) {
   // Output chapter information
-  chapterSectionsArray = ShowChapterOrSectionMacro.prototype.chaptersToSectionsMap.get(chapterName)
+  chapterSectionsArray = ShowChapterOrSectionMacro.prototype.chaptersToSectionsMap[chapterName]
 
   sectionsList = "<ul class=\"section-list\">"
 
