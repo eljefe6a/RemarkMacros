@@ -4,19 +4,9 @@ var SourceStats = function () {
 SourceStats.prototype.chapters = []
 
 // Outputs timings and stats
-SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerDay, demoMultiplier, exerciseMultiplier) {
-  // Check if the optional parameters are added
-  if (typeof hoursPerDay == 'undefined') {
-    hoursPerDay = 6.5
-  }
-
-  if (typeof demoMultiplier == 'undefined') {
-    demoMultiplier = 1
-  }
-
-  if (typeof exerciseMultiplier == 'undefined') {
-    exerciseMultiplier = 1
-  }
+SourceStats.prototype.outputStats = function(slideshow, params) {
+  // params["hoursPerDay"],
+  //  params["demoMultiplier"], params["exerciseMultiplier"]
 
   var slides = slideshow.getSlides()
 
@@ -45,7 +35,7 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
       if (typeof SourceStats.prototype.chapters[currentChapter].sections[currentSection] == 'undefined') {
         currentSection++;
 
-        currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, "placeholder")
+        currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, "section")
       }
 
       SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
@@ -56,30 +46,30 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
     } else if (template == "demo") {
       SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
         type: "demo",
-        minutes: parseInt(slides[i].properties.minutes) * demoMultiplier
+        minutes: parseInt(slides[i].properties.minutes) * params["demoMultiplier"]
       }
 
       currentSlide++
     } else if (template == "exercise") {
       SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
         type: "exercise",
-        minutes: parseInt(slides[i].properties.minutes) * exerciseMultiplier
+        minutes: parseInt(slides[i].properties.minutes) * params["exerciseMultiplier"]
       }
 
       currentSlide++
     } else if (template == "final") {
       SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
         type: "final",
-        minutes: parseInt(slides[i].properties.minutes) * exerciseMultiplier
+        minutes: parseInt(slides[i].properties.minutes) * params["exerciseMultiplier"]
       }
 
       currentSlide++
     }
   }
 
-  SourceStats.prototype.enrichChaptersAndSections(slidesPerHour)
+  SourceStats.prototype.enrichChaptersAndSections(params)
 
-  SourceStats.prototype.displayChapters(slidesPerHour, hoursPerDay)
+  SourceStats.prototype.displayChapters(params)
 }
 
 SourceStats.prototype.createSection = function(currentChapter, currentSection, sectionName) {
@@ -91,7 +81,7 @@ SourceStats.prototype.createSection = function(currentChapter, currentSection, s
   return 0
 }
 
-SourceStats.prototype.enrichChaptersAndSections = function(slidesPerHour) {
+SourceStats.prototype.enrichChaptersAndSections = function(params) {
   for (var i = 0; i < SourceStats.prototype.chapters.length; i++) {
     var chapterRegular = 0
     var chapterSlideTime = 0
@@ -120,7 +110,7 @@ SourceStats.prototype.enrichChaptersAndSections = function(slidesPerHour) {
         }
       }
 
-      sectionSlideTime = ((sectionRegular / slidesPerHour) * 60)
+      sectionSlideTime = ((sectionRegular / params["slidesperhour"]) * 60)
 
       // Enrich the sections
       SourceStats.prototype.chapters[i].sections[j]["sectionRegular"] = sectionRegular
@@ -169,8 +159,16 @@ SourceStats.prototype.pad = function(value, length) {
     return (value.toString().length < length) ? this.pad("0"+value, length):value;
 }
 
-SourceStats.prototype.displayChapters = function(slidesPerHour, hoursPerDay) {
+SourceStats.prototype.displayChapters = function(params) {
   html = ""
+
+  namePad = 50
+  dayPad = 9
+  numSlidesPad = 2
+  chapPad = 6
+  slidePad = 6
+  exerPad = 6
+  demoPad = 6
 
   var totalSlides = 0;
   var totalDemo = 0;
@@ -178,37 +176,57 @@ SourceStats.prototype.displayChapters = function(slidesPerHour, hoursPerDay) {
   var totalFinal = 0;
   var totalSlideTime = 0;
 
+  // Output header
+  html += s.rpad("Name", namePad, " ") + s.rpad("Day", dayPad, " ") + s.rpad("#", numSlidesPad + 1, " ") +
+     s.rpad("Chap", chapPad, " ") + s.rpad("Slide", slidePad, " ") + s.rpad("Exer", exerPad, " ") +
+     s.rpad("Demo", demoPad, " ") + "\n"
+
   for (var i = 0; i < SourceStats.prototype.chapters.length; i++) {
     totalSlides += SourceStats.prototype.chapters[i].chapterRegular
     totalDemo += SourceStats.prototype.chapters[i].chapterDemoMinutes
-    totalExercise += SourceStats.prototype.chapters[i].chapterExerciseMinutes + SourceStats.prototype.chapters[i].chapterFinalMinutes
+    totalExercise += SourceStats.prototype.chapters[i].chapterExerciseMinutes
+
+    if (params["includeFinals"] == true) {
+      totalExercise += SourceStats.prototype.chapters[i].chapterFinalMinutes
+    }
+    
     totalFinal += SourceStats.prototype.chapters[i].chapterFinalMinutes
     totalSlideTime += SourceStats.prototype.chapters[i].chapterSlideTime
 
-    daysMinutes = SourceStats.prototype.calculateTime(totalSlides, totalDemo, totalExercise, slidesPerHour, hoursPerDay)
+    daysMinutes = SourceStats.prototype.calculateTime(totalSlides, totalDemo, totalExercise, params["slidesperhour"], params["hoursPerDay"])
+    runningTime = "D" + daysMinutes[0] + " " + this.toHHMM(daysMinutes[1])
 
-    html += SourceStats.prototype.chapters[i].name
-    html += "\tD" + daysMinutes[0] + " " + this.toHHMM(daysMinutes[1])
-    html += "\t" + SourceStats.prototype.chapters[i].chapterRegular
-    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterTotalMinutes)
-    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterSlideTime)
-    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes + 
-      SourceStats.prototype.chapters[i].chapterFinalMinutes)
-    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterDemoMinutes) + "\n"
+    html += s.rpad(SourceStats.prototype.chapters[i].name, namePad, " ");
+    html += s.rpad(runningTime, dayPad, " ");
+    html += s.lpad(SourceStats.prototype.chapters[i].chapterRegular, numSlidesPad, " ") + " ";
+    html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterTotalMinutes), chapPad, " ");
+    html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterSlideTime), slidePad, " ");
+    html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes + 
+      SourceStats.prototype.chapters[i].chapterFinalMinutes), exerPad, " ");
+    html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterDemoMinutes), demoPad, " ");
+    html += "\n"
 
     // Output section information
-    for (var j = 0; j < SourceStats.prototype.chapters[i].sections.length; j++) {
-      html += "  " + SourceStats.prototype.chapters[i].sections[j].name
-      html += "\t" + SourceStats.prototype.chapters[i].sections[j].sectionRegular
-      // html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionTotalMinutes)
-      html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionSlideTime)
-      //html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionExerciseMinutes)
-      //html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionDemoMinutes)
-      html += "\n"      
+    if (params["outputSections"] == true) {
+      for (var j = 0; j < SourceStats.prototype.chapters[i].sections.length; j++) {
+        html += "  " + s.rpad(SourceStats.prototype.chapters[i].sections[j].name, namePad - 2, " ")
+        // Position in day isn't calculated for sections
+        html += s.rpad("", dayPad, " ");
+        html += s.lpad(SourceStats.prototype.chapters[i].sections[j].sectionRegular, numSlidesPad, " ") + " ";
+        html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionTotalMinutes), chapPad, " ");
+        html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionSlideTime), slidePad, " ");
+        html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionExerciseMinutes), exerPad, " ");
+        html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionDemoMinutes), demoPad, " ");
+        html += "\n"
+      }
     }
   }
 
-  totalCourseTime = totalDemo + totalExercise + totalSlideTime + totalFinal
+  totalCourseTime = totalDemo + totalExercise + totalSlideTime
+  
+  if (params["includeFinals"] == true) {
+   totalCourseTime =+ totalFinal
+  }
 
   html += "\n\n"
 
