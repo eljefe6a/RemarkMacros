@@ -175,12 +175,12 @@ SourceStats.prototype.displayChapters = function(slidesPerHour, hoursPerDay) {
     daysMinutes = SourceStats.prototype.calculateTime(totalSlides, totalDemo, totalExercise, slidesPerHour, hoursPerDay)
 
     html += SourceStats.prototype.chapters[i].name
-    html += " D" + daysMinutes[0] + " " + this.toHHMM(daysMinutes[1])
-    html += "     " + SourceStats.prototype.chapters[i].chapterRegular
-    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterTotalMinutes)
-    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterSlideTime)
-    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes)
-    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterDemoMinutes) + "\n"
+    html += "\tD" + daysMinutes[0] + " " + this.toHHMM(daysMinutes[1])
+    html += "\t" + SourceStats.prototype.chapters[i].chapterRegular
+    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterTotalMinutes)
+    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterSlideTime)
+    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes)
+    html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterDemoMinutes) + "\n"
   }
 
   totalCourseTime = totalDemo + totalExercise + totalSlideTime
