@@ -195,6 +195,17 @@ SourceStats.prototype.displayChapters = function(slidesPerHour, hoursPerDay) {
     html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes + 
       SourceStats.prototype.chapters[i].chapterFinalMinutes)
     html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].chapterDemoMinutes) + "\n"
+
+    // Output section information
+    for (var j = 0; j < SourceStats.prototype.chapters[i].sections.length; j++) {
+      html += "  " + SourceStats.prototype.chapters[i].sections[j].name
+      html += "\t" + SourceStats.prototype.chapters[i].sections[j].sectionRegular
+      // html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionTotalMinutes)
+      html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionSlideTime)
+      //html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionExerciseMinutes)
+      //html += "\t" + this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionDemoMinutes)
+      html += "\n"      
+    }
   }
 
   totalCourseTime = totalDemo + totalExercise + totalSlideTime
