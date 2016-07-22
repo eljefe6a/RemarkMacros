@@ -208,7 +208,7 @@ SourceStats.prototype.displayChapters = function(slidesPerHour, hoursPerDay) {
     }
   }
 
-  totalCourseTime = totalDemo + totalExercise + totalSlideTime
+  totalCourseTime = totalDemo + totalExercise + totalSlideTime + totalFinal
 
   html += "\n\n"
 
@@ -219,7 +219,7 @@ SourceStats.prototype.displayChapters = function(slidesPerHour, hoursPerDay) {
   html += "Total Exercises: " + this.toHHMM(totalExercise) + "\n"
   html += "Total Finals: " + this.toHHMM(totalFinal) + "\n"
 
-  exerciseDemoPercent = (((totalDemo + totalExercise) / totalCourseTime) * 100).toFixed(1)
+  exerciseDemoPercent = (((totalDemo + totalExercise + totalFinal) / totalCourseTime) * 100).toFixed(1)
   html += exerciseDemoPercent + "% of class time is exercises/demos"
 
   console.log(html)
