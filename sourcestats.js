@@ -1,44 +1,7 @@
 var SourceStats = function () {
 };
 
-// Downloads the sourceUrls and returns the results in Remark format
-SourceStats.prototype.createSource = function(classJSONUrl) {
-  // Download class file
-  classfile = this.getFile(classJSONUrl)
-  classJSON = JSON.parse(classfile)
-
-  // Set the class title
-  document.title = classJSON.classname
-
-  var source = ""
-
-  // Add all modules for the class
-  for (var i = 0; i < classJSON.classmodules.length; i++) {
-    source += this.getFile(classJSON.classmodules[i]);
-
-    // Files shouldn't have --- at the head or foot
-    // It is added automatically here
-    if (i + 1 < classJSON.classmodules.length) {
-      source += "\n---\n"
-    }
-  };
-
-  return source
-}
-
-SourceStats.prototype.getFile = function(url) {
-  var xmlhttp = new XMLHttpRequest();
-
-  xmlhttp.open('GET', url, false);
-  xmlhttp.send();
-
-  if (xmlhttp.status != 200) {
-    console.log(url + " could not be found and added to source.")
-    return ""
-  }
-
-  return xmlhttp.responseText;
-}
+SourceStats.prototype.chapters = []
 
 // Outputs timings and stats
 SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerDay, demoMultiplier, exerciseMultiplier) {
@@ -57,80 +20,131 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
 
   var slides = slideshow.getSlides()
 
-  var chapters = -1;
-  var sections = 0;
-  var regular = 0;
-  var demoMinutes = 0;
-  var exerciseMinutes = 0;
+  var hasSeenFirstChapter = false;
 
-  var currentSlides = 0;
-  var currentDemoMinutes = 0;
-  var currentExerciseMinutes = 0;
-  var currentChapterName = ""
-
-  chapterTimes = {}
-  chapterTimes["chapters"] = []
+  var currentChapter = -1;
+  var currentSection = -1;
+  var currentSlide = 0;
 
   for (var i = 0; i < slides.length; i++) {
     var template = slides[i].properties.template;
 
     if (template == "chapter") {
-      chapters++;
+      currentChapter++;
 
-      if (chapters != 0) {
-        chapterTimes["chapters"].push(this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay))
+      hasSeenFirstChapter = true;
 
-        currentSlides = 0;
-        currentExerciseMinutes = 0;
-        currentDemoMinutes = 0;
+      SourceStats.prototype.chapters[currentChapter] = {}
+
+      SourceStats.prototype.chapters[currentChapter].name = slides[i].properties.name;
+      
+      // Reset sections
+      SourceStats.prototype.chapters[currentChapter].sections = [];
+      currentSection = -1;
+    }
+
+    // Ignore the title and subsequent slides
+    // only start counting after the first chapter
+    // is seen
+    if (hasSeenFirstChapter == true) {
+      if (template == "section") {
+        currentSection++;
+
+        currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, slides[i].properties.name)
+      } else if (template == "regular" || template == "code" || template == "image") {
+        if (typeof SourceStats.prototype.chapters[currentChapter].sections[currentSection] == 'undefined') {
+          currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, "placeholder")
+        }
+
+        SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
+          type: "regular"
+        }
+
+        currentSlide++
+      } else if (template == "demo") {
+        SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
+          type: "demo",
+          minutes: parseInt(slides[i].properties.minutes) * demoMultiplier
+        }
+
+        currentSlide++
+      } else if (template == "exercise") {
+        SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
+          type: "exercise",
+          minutes: parseInt(slides[i].properties.minutes) * exerciseMultiplier
+        }
+
+        currentSlide++
       }
-
-      currentChapterName = slides[i].properties.name;
-    } else if (template == "section") {
-      sections++;
-    } else if (template == "regular" || template == "code" || template == "image") {
-      regular++;
-      currentSlides++;
-    } else if (template == "demo") {
-      var minutes = parseInt(slides[i].properties.minutes) * demoMultiplier
-      demoMinutes += minutes;
-      currentDemoMinutes += minutes;
-    } else if (template == "exercise") {
-      var minutes = parseInt(slides[i].properties.minutes) * exerciseMultiplier
-      exerciseMinutes += minutes;
-      currentExerciseMinutes += minutes;
     }
   }
 
-  chapterTimes["chapters"].push(this.outputChapterTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay))
+  console.log(SourceStats.prototype.chapters)
 
-  chapterTimes["total"] = {
-    "totalchapters": chapters,
-    "totalsections": sections,
-    "totalregular": regular,
-    "totaldemos": demoMinutes,
-    "totalexercises": exerciseMinutes,
-    "slidesperhour": slidesPerHour
-  }
+  SourceStats.prototype.enrichChaptersAndSections(slidesPerHour)
 
-  this.displayChapters(chapterTimes)
+  SourceStats.prototype.displayChapters(slidesPerHour, hoursPerDay)
 }
 
-SourceStats.prototype.outputChapterTime = function(regular, demoMinutes, exerciseMinutes, slidesPerHour, chapters, currentChapterName, currentSlides, currentExerciseMinutes, currentDemoMinutes, hoursPerDay) {
-  chapterTime = this.calculateTime(regular, demoMinutes, exerciseMinutes, slidesPerHour, hoursPerDay)
+SourceStats.prototype.createSection = function(currentChapter, currentSection, sectionName) {
+  SourceStats.prototype.chapters[currentChapter].sections[currentSection] = {}
 
-  chapterMap = {
-    "overallruntimedays": chapterTime[0],
-    "overallruntimeminutes": chapterTime[1],
-    "chapter": chapters,
-    "chaptername": currentChapterName,
-    "chapterslides": currentSlides,
-    "chapterexerciseminutes": currentExerciseMinutes,
-    "chapterdemominutes": currentDemoMinutes,
-    "chaptertotaltime": ((currentSlides * (60 / slidesPerHour)) + currentExerciseMinutes + currentDemoMinutes).toFixed()
+  SourceStats.prototype.chapters[currentChapter].sections[currentSection].name = sectionName;
+  SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides = []
+
+  return 0
+}
+
+SourceStats.prototype.enrichChaptersAndSections = function(slidesPerHour) {
+  for (var i = 0; i < SourceStats.prototype.chapters.length; i++) {
+    var chapterRegular = 0
+    var chapterSlideTime = 0
+    var chapterDemoMinutes = 0
+    var chapterExerciseMinutes = 0
+    var chapterTotalMinutes = 0
+
+    for (var j = 0; j < SourceStats.prototype.chapters[i].sections.length; j++) {
+      var sectionRegular = 0
+      var sectionSlideTime = 0
+      var sectionDemoMinutes = 0
+      var sectionExerciseMinutes = 0
+
+      for (var k = 0; k < SourceStats.prototype.chapters[i].sections[j].slides.length; k++) {
+        slidetype = SourceStats.prototype.chapters[i].sections[j].slides[k].type
+
+        if (slidetype == "regular") {
+          sectionRegular++
+        } else if (slidetype == "demo") {
+          sectionDemoMinutes += SourceStats.prototype.chapters[i].sections[j].slides[k].minutes
+        } else if (slidetype == "exercise") {
+          sectionExerciseMinutes += SourceStats.prototype.chapters[i].sections[j].slides[k].minutes
+        }
+      }
+
+      sectionSlideTime = ((sectionRegular / slidesPerHour) * 60)
+
+      // Enrich the sections
+      SourceStats.prototype.chapters[i].sections[j]["sectionRegular"] = sectionRegular
+      SourceStats.prototype.chapters[i].sections[j]["sectionSlideTime"] = sectionSlideTime
+      SourceStats.prototype.chapters[i].sections[j]["sectionDemoMinutes"] = sectionDemoMinutes
+      SourceStats.prototype.chapters[i].sections[j]["sectionExerciseMinutes"] = sectionExerciseMinutes
+      SourceStats.prototype.chapters[i].sections[j]["sectionTotalMinutes"] = 
+        sectionSlideTime + sectionDemoMinutes + sectionExerciseMinutes
+
+      chapterRegular += sectionRegular
+      chapterSlideTime += sectionSlideTime
+      chapterDemoMinutes += sectionDemoMinutes
+      chapterExerciseMinutes += sectionExerciseMinutes
+      chapterTotalMinutes += SourceStats.prototype.chapters[i].sections[j]["sectionTotalMinutes"]
+    }
+
+    // Enrich the chapters
+    SourceStats.prototype.chapters[i]["chapterRegular"] = chapterRegular
+    SourceStats.prototype.chapters[i]["chapterSlideTime"] = chapterSlideTime
+    SourceStats.prototype.chapters[i]["chapterDemoMinutes"] = chapterDemoMinutes
+    SourceStats.prototype.chapters[i]["chapterExerciseMinutes"] = chapterExerciseMinutes
+    SourceStats.prototype.chapters[i]["chapterTotalMinutes"] = chapterTotalMinutes
   }
-
-  return chapterMap
 }
 
 // Calculates the current run time
@@ -148,43 +162,50 @@ SourceStats.prototype.toHHMM = function(minutes) {
   realMinutes = minutes % 60
   hours = (minutes - realMinutes) / 60
 
-  return this.pad(hours, 1) + ":" + this.pad(realMinutes, 2)
+  return this.pad(hours, 1) + ":" + this.pad(parseInt(realMinutes), 2)
 }
 
 SourceStats.prototype.pad = function(value, length) {
     return (value.toString().length < length) ? this.pad("0"+value, length):value;
 }
 
-SourceStats.prototype.displayChapters = function(chapterTimes) {
-  slidesPerMinute = 60 / chapterTimes["total"]["slidesperhour"]
-
+SourceStats.prototype.displayChapters = function(slidesPerHour, hoursPerDay) {
   html = ""
 
-  for (var i = 0; i < chapterTimes["chapters"].length; i++) {
-    totalSlideTime = chapterTimes["chapters"][i]["chapterslides"] * slidesPerMinute
+  var totalSlides = 0;
+  var totalDemo = 0;
+  var totalExercise = 0;
+  var totalSlideTime = 0;
 
-    html += chapterTimes["chapters"][i]["chaptername"]
-    html += " D" + chapterTimes["chapters"][i]["overallruntimedays"] + " " + this.toHHMM(chapterTimes["chapters"][i]["overallruntimeminutes"])
-    html += "     " + chapterTimes["chapters"][i]["chapterslides"]
-    html += " " + this.toHHMM(chapterTimes["chapters"][i]["chaptertotaltime"])
-    html += " " + this.toHHMM(totalSlideTime.toFixed())
-    html += " " + this.toHHMM(chapterTimes["chapters"][i]["chapterexerciseminutes"])
-    html += " " + this.toHHMM(chapterTimes["chapters"][i]["chapterdemominutes"]) + "\n"
+  for (var i = 0; i < SourceStats.prototype.chapters.length; i++) {
+    totalSlides += SourceStats.prototype.chapters[i].chapterRegular
+    totalDemo += SourceStats.prototype.chapters[i].chapterDemoMinutes
+    totalExercise += SourceStats.prototype.chapters[i].chapterExerciseMinutes
+    totalSlideTime += SourceStats.prototype.chapters[i].chapterSlideTime
+
+    daysMinutes = SourceStats.prototype.calculateTime(totalSlides, totalDemo, totalExercise, slidesPerHour, hoursPerDay)
+
+    html += SourceStats.prototype.chapters[i].name
+    html += " D" + daysMinutes[0] + " " + this.toHHMM(daysMinutes[1])
+    html += "     " + SourceStats.prototype.chapters[i].chapterRegular
+    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterTotalMinutes)
+    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterSlideTime)
+    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes)
+    html += " " + this.toHHMM(SourceStats.prototype.chapters[i].chapterDemoMinutes) + "\n"
   }
 
-  slidesPerMinute = 60 / chapterTimes["total"]["slidesperhour"]
-  totalSlideTime = chapterTimes["total"]["totalregular"] * slidesPerMinute
-  totalCourseTime = totalSlideTime + chapterTimes["total"]["totaldemos"] + chapterTimes["total"]["totalexercises"]
+  totalCourseTime = totalDemo + totalExercise + totalSlideTime
 
   html += "\n\n"
 
-  html += "Total Time: " + this.toHHMM(totalCourseTime.toFixed()) + "\n"
-  html += "Total Slides: " + chapterTimes["total"]["totalregular"] + "\n"
-  html += "Total Slide Time: " + this.toHHMM(totalSlideTime.toFixed()) + "\n"
-  html += "Total Demos: " + this.toHHMM(chapterTimes["total"]["totaldemos"]) + "\n"
-  html += "Total Exercises: " + this.toHHMM(chapterTimes["total"]["totalexercises"]) + "\n"
+  html += "Total Time: " + this.toHHMM((totalCourseTime)) + "\n"
+  html += "Total Slides: " + totalSlides + "\n"
+  html += "Total Slide Time: " + this.toHHMM(totalSlideTime) + "\n"
+  html += "Total Demos: " + this.toHHMM(totalDemo) + "\n"
+  html += "Total Exercises: " + this.toHHMM(totalExercise) + "\n"
 
-  html += (((chapterTimes["total"]["totaldemos"] + chapterTimes["total"]["totalexercises"]) / totalCourseTime) * 100).toFixed(1) + "% of class time is exercises/demos"
+  exerciseDemoPercent = (((totalDemo + totalExercise) / totalCourseTime) * 100).toFixed(1)
+  html += exerciseDemoPercent + "% of class time is exercises/demos"
 
   console.log(html)
 }
