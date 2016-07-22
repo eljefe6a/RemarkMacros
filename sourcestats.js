@@ -169,6 +169,7 @@ SourceStats.prototype.displayChapters = function(params) {
   slidePad = 6
   exerPad = 6
   demoPad = 6
+  finalPad = 6
 
   var totalSlides = 0;
   var totalDemo = 0;
@@ -179,7 +180,7 @@ SourceStats.prototype.displayChapters = function(params) {
   // Output header
   html += s.rpad("Name", namePad, " ") + s.rpad("Day", dayPad, " ") + s.rpad("#", numSlidesPad + 1, " ") +
      s.rpad("Chap", chapPad, " ") + s.rpad("Slide", slidePad, " ") + s.rpad("Exer", exerPad, " ") +
-     s.rpad("Demo", demoPad, " ") + "\n"
+     s.rpad("Demo", demoPad, " ") + s.rpad("Finl", finalPad, " ") + "\n"
 
   for (var i = 0; i < SourceStats.prototype.chapters.length; i++) {
     totalSlides += SourceStats.prototype.chapters[i].chapterRegular
@@ -201,9 +202,9 @@ SourceStats.prototype.displayChapters = function(params) {
     html += s.lpad(SourceStats.prototype.chapters[i].chapterRegular, numSlidesPad, " ") + " ";
     html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterTotalMinutes), chapPad, " ");
     html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterSlideTime), slidePad, " ");
-    html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes + 
-      SourceStats.prototype.chapters[i].chapterFinalMinutes), exerPad, " ");
+    html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterExerciseMinutes), exerPad, " ");
     html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterDemoMinutes), demoPad, " ");
+    html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].chapterFinalMinutes), finalPad, " ");
     html += "\n"
 
     // Output section information
@@ -217,6 +218,8 @@ SourceStats.prototype.displayChapters = function(params) {
         html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionSlideTime), slidePad, " ");
         html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionExerciseMinutes), exerPad, " ");
         html += s.rpad(this.toHHMM(SourceStats.prototype.chapters[i].sections[j].sectionDemoMinutes), demoPad, " ");
+        // Finals aren't calculated for sections
+        html += s.rpad("", finalPad, " ");
         html += "\n"
       }
     }
