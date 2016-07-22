@@ -20,8 +20,6 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
 
   var slides = slideshow.getSlides()
 
-  var hasSeenFirstChapter = false;
-
   var currentChapter = -1;
   var currentSection = -1;
   var currentSlide = 0;
@@ -29,10 +27,8 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
   for (var i = 0; i < slides.length; i++) {
     var template = slides[i].properties.template;
 
-    if (template == "chapter") {
+    if (template == "chapter" || template == "title") {
       currentChapter++;
-
-      hasSeenFirstChapter = true;
 
       SourceStats.prototype.chapters[currentChapter] = {}
 
@@ -41,45 +37,38 @@ SourceStats.prototype.outputStats = function(slideshow, slidesPerHour, hoursPerD
       // Reset sections
       SourceStats.prototype.chapters[currentChapter].sections = [];
       currentSection = -1;
-    }
+    } else if (template == "section") {
+      currentSection++;
 
-    // Ignore the title and subsequent slides
-    // only start counting after the first chapter
-    // is seen
-    if (hasSeenFirstChapter == true) {
-      if (template == "section") {
+      currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, slides[i].properties.name)
+    } else if (template == "regular" || template == "code" || template == "image") {
+      if (typeof SourceStats.prototype.chapters[currentChapter].sections[currentSection] == 'undefined') {
         currentSection++;
 
-        currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, slides[i].properties.name)
-      } else if (template == "regular" || template == "code" || template == "image") {
-        if (typeof SourceStats.prototype.chapters[currentChapter].sections[currentSection] == 'undefined') {
-          currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, "placeholder")
-        }
-
-        SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
-          type: "regular"
-        }
-
-        currentSlide++
-      } else if (template == "demo") {
-        SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
-          type: "demo",
-          minutes: parseInt(slides[i].properties.minutes) * demoMultiplier
-        }
-
-        currentSlide++
-      } else if (template == "exercise") {
-        SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
-          type: "exercise",
-          minutes: parseInt(slides[i].properties.minutes) * exerciseMultiplier
-        }
-
-        currentSlide++
+        currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, "placeholder")
       }
+
+      SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
+        type: "regular"
+      }
+
+      currentSlide++
+    } else if (template == "demo") {
+      SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
+        type: "demo",
+        minutes: parseInt(slides[i].properties.minutes) * demoMultiplier
+      }
+
+      currentSlide++
+    } else if (template == "exercise") {
+      SourceStats.prototype.chapters[currentChapter].sections[currentSection].slides[currentSlide] = {
+        type: "exercise",
+        minutes: parseInt(slides[i].properties.minutes) * exerciseMultiplier
+      }
+
+      currentSlide++
     }
   }
-
-  console.log(SourceStats.prototype.chapters)
 
   SourceStats.prototype.enrichChaptersAndSections(slidesPerHour)
 
