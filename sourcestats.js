@@ -17,7 +17,7 @@ SourceStats.prototype.outputStats = function(slideshow, params) {
   for (var i = 0; i < slides.length; i++) {
     var template = slides[i].properties.template;
 
-    if (template == "chapter" || template == "title") {
+    if (template == "chapter" || template == "title" || template == "titlewithsubtitle") {
       currentChapter++;
 
       SourceStats.prototype.chapters[currentChapter] = {}
