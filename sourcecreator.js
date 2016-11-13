@@ -121,8 +121,8 @@ SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, s
 
 // If there is an include or exclude, process them
 SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleInfo, classJSON) {
-  includeSlides = moduleInfo.include;
-  excludeSlides = moduleInfo.exclude;
+  includeSlides = moduleInfo["include"];
+  excludeSlides = moduleInfo["exclude"];
 
   // Include and excludes are optional. Check if they're there.
   if (includeSlides == undefined && excludeSlides == undefined) {
@@ -132,65 +132,54 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
     // Split file into slides
     fileSplits = fileSource.split("---")
 
-    slidesToInclude = []
+    // Convert splits to map
+    fileSplits = fileSplits.reduce(function(o, v, i) {
+      valuesMap = {}
+      valuesMap["slidetext"] = v
+      valuesMap["included"] = "unknown"
 
-    console.log(SourceCreator.prototype.mixrange(includeSlides))
+      o[i.toString()] = valuesMap;
+      return o;
+    }, {});
+
+    slidesToInclude = []
 
     // See if it include exists
     if (includeSlides == undefined) {
       // Add all if it doesn't exist
-      slidesToInclude.push(SourceCreator.prototype.range(1, fileSplits.length))
+      slidesToInclude = SourceCreator.prototype.range(1, fileSplits.length)
     } else {
       // Add specifically included slides
-      slidesToInclude.push(SourceCreator.prototype.mixrange(includeSlides))
+      slidesToInclude = SourceCreator.prototype.mixrange(includeSlides)
+    }
 
-      // Start here. Includes not working right
-      console.log(SourceCreator.prototype.mixrange(includeSlides))
+    for (var i = slidesToInclude.length - 1; i >= 0; i--) {
+      fileSplits[slidesToInclude[i].toString()]["included"] = "included"
     }
 
     // See if it exclude exists
-    if (excludeSlides == undefined) {
+    if (excludeSlides != undefined) {
       // Split and add all
-      slidesToExclude = SourceCreator.prototype.mixrange(includeSlides)
+      slidesToExclude = SourceCreator.prototype.mixrange(excludeSlides)
 
       for (var i = slidesToExclude.length - 1; i >= 0; i--) {
-        for (var j = slidesToInclude.length - 1; j >= 0; j--) {
-          // Go through each slide to see if it should be excluded
-          if (slidesToExclude[i] == slidesToInclude[j]) {
-            // Found a slide to exclude, remove it
-            slidesToInclude.pop(j)
-            break
-          }
-        }
+        fileSplits[slidesToExclude[i].toString()]["included"] = "excluded"
       }
     }
 
     // Reassemble the slides with the includes and excludes
-    for (var i = fileSplits.length - 1; i >= 0; i--) {
-      wasFound = false
-      for (var j = slidesToInclude.length - 1; j >= 0; j--) {
-        // Go through slides to see if it was included
-        if (slidesToInclude[j] = fileSplits[i]) {
-          wasFound = true
-          break
-        }
-      }
-      
-      if (wasFound == false) {
-        // Slide wasn't found. Remove it
-        fileSplits.pop(i)
-        console.log("Popping")
-      }
-    }
-
     toReturn = ""
+    var first = true
 
-    // Recombine remaining slides and return
-    for (var i = 0; i < fileSplits.length; i++) {
-      toReturn += fileSplits[i]
+    for (var i in fileSplits) {
+      if (fileSplits[i]["included"] == "included") {
+        if (first == false) {
+          toReturn += "---"
+        }
 
-      if (i + 1 != fileSplits.length) {
-        toReturn += "---"
+        toReturn += fileSplits[i]["slidetext"]
+
+        first = false
       }
     }
 

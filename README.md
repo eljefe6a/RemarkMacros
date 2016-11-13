@@ -20,7 +20,7 @@ Here is the JSON for the `class.json` file:
         "classdescription" : "Option class description",
         "classmodules" : [
                 {"filename" : "path/to/remark/foo.md"},
-                {"filename" : "another/path/to/remark/bar.md"}
+                {"filename" : "another/path/to/remark/bar.md", "include" : "1-2 5-7", "exclude" : "6"}
         ]
 }
 ```
