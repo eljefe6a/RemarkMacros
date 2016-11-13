@@ -19,8 +19,8 @@ Here is the JSON for the `class.json` file:
         "classname" : "Name of the class",
         "classdescription" : "Option class description",
         "classmodules" : [
-                "path/to/remark/foo.md",
-                "another/path/to/remark/bar.md"
+                {"filename" : "path/to/remark/foo.md"},
+                {"filename" : "another/path/to/remark/bar.md"}
         ]
 }
 ```

@@ -24,8 +24,10 @@ SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, 
 
     // Download all modules
     for (var i = 0; i < classJSON.classmodules.length; i++) {
+      currentModule = classJSON.classmodules[i];
+
       classJSON.ajaxCall[i] = $.ajax({
-      url: classJSON.classmodules[i],
+      url: classJSON.classmodules[i].filename,
       cache: false
       })
     }
@@ -46,7 +48,7 @@ SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunctio
     fileSource = classJSON.ajaxCall[i].responseText
     
     // Concat that module's Ajax calls together
-    ajaxCalls = SourceCreator.prototype.downloadModule(classJSON, fileSource, classJSON.classmodules[i])
+    ajaxCalls = SourceCreator.prototype.downloadModule(classJSON, fileSource, classJSON.classmodules[i].filename)
     allModuleAjaxCalls = allModuleAjaxCalls.concat(ajaxCalls)
   }
 
@@ -88,16 +90,18 @@ SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, s
   for (var i = 0; i < classJSON.classmodules.length; i++) {
     fileSource = classJSON.ajaxCall[i].responseText
 
+    fileSource = SourceCreator.prototype.processIncludeAndExclude(fileSource, classJSON.classmodules[i], classJSON)
+
     moduleSource = ""
 
     if (showChapters == true) {
       moduleSource += SourceCreator.prototype.addChapters(fileSource)
     }
 
-    moduleSource += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i], classJSON)
+    moduleSource += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i].filename, classJSON)
 
     if (showSections == true) {
-      moduleSource = SourceCreator.prototype.addSections(moduleSource, classJSON.classmodules[i], classJSON)
+      moduleSource = SourceCreator.prototype.addSections(moduleSource, classJSON.classmodules[i].filename, classJSON)
     }
 
     // Files shouldn't have --- at the head or foot
@@ -114,6 +118,131 @@ SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, s
   // All modules downloaded, callback to function that we're done
   callbackfunction(source)
 }
+
+// If there is an include or exclude, process them
+SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleInfo, classJSON) {
+  includeSlides = moduleInfo.include;
+  excludeSlides = moduleInfo.exclude;
+
+  // Include and excludes are optional. Check if they're there.
+  if (includeSlides == undefined && excludeSlides == undefined) {
+    // Neither defined. Return as is
+    return fileSource
+  } else {
+    // Split file into slides
+    fileSplits = fileSource.split("---")
+
+    slidesToInclude = []
+
+    console.log(SourceCreator.prototype.mixrange(includeSlides))
+
+    // See if it include exists
+    if (includeSlides == undefined) {
+      // Add all if it doesn't exist
+      slidesToInclude.push(SourceCreator.prototype.range(1, fileSplits.length))
+    } else {
+      // Add specifically included slides
+      slidesToInclude.push(SourceCreator.prototype.mixrange(includeSlides))
+
+      // Start here. Includes not working right
+      console.log(SourceCreator.prototype.mixrange(includeSlides))
+    }
+
+    // See if it exclude exists
+    if (excludeSlides == undefined) {
+      // Split and add all
+      slidesToExclude = SourceCreator.prototype.mixrange(includeSlides)
+
+      for (var i = slidesToExclude.length - 1; i >= 0; i--) {
+        for (var j = slidesToInclude.length - 1; j >= 0; j--) {
+          // Go through each slide to see if it should be excluded
+          if (slidesToExclude[i] == slidesToInclude[j]) {
+            // Found a slide to exclude, remove it
+            slidesToInclude.pop(j)
+            break
+          }
+        }
+      }
+    }
+
+    // Reassemble the slides with the includes and excludes
+    for (var i = fileSplits.length - 1; i >= 0; i--) {
+      wasFound = false
+      for (var j = slidesToInclude.length - 1; j >= 0; j--) {
+        // Go through slides to see if it was included
+        if (slidesToInclude[j] = fileSplits[i]) {
+          wasFound = true
+          break
+        }
+      }
+      
+      if (wasFound == false) {
+        // Slide wasn't found. Remove it
+        fileSplits.pop(i)
+        console.log("Popping")
+      }
+    }
+
+    toReturn = ""
+
+    // Recombine remaining slides and return
+    for (var i = 0; i < fileSplits.length; i++) {
+      toReturn += fileSplits[i]
+
+      if (i + 1 != fileSplits.length) {
+        toReturn += "---"
+      }
+    }
+
+    return toReturn
+  }
+}
+
+// Gets the ranges to include
+SourceCreator.prototype.mixrange = function(s) {
+  r = []
+
+  var rangeSplit = s.split(" ")
+
+  for (var i = 0; i < rangeSplit.length; i++) {
+    if (rangeSplit[i].indexOf('-') == -1) {
+      r.push(parseInt(rangeSplit[i]))
+    } else {
+      numberSplit = rangeSplit[i].split("-")
+
+      start = parseInt(numberSplit[0])
+      stop = parseInt(numberSplit[1])
+      
+      rangeArray = this.range(start, stop + 1)
+
+      for (var j = 0; j < rangeArray.length; j++) {
+        r.push(rangeArray[j])
+      }
+    }
+  }
+
+  return r;
+}
+
+// Gets an array based on the array
+SourceCreator.prototype.range = function(start, stop, step){
+  if (typeof stop=='undefined'){
+      // one param defined
+      stop = start;
+      start = 0;
+  };
+  if (typeof step=='undefined'){
+      step = 1;
+  };
+  if ((step>0 && start>=stop) || (step<0 && start<=stop)){
+      return [];
+  };
+  var result = []
+  for (var i=start; step>0 ? i<stop : i>stop; i+=step){
+      result.push(i);
+  };
+  return result;
+};
 
 // Now that file is downloaded, replaces includemodule with the module
 SourceCreator.prototype.importModule = function(fileSource, moduleFileName, classJSON) {
