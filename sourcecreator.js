@@ -130,7 +130,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
     return fileSource
   } else {
     // Split file into slides
-    fileSplits = fileSource.split("---")
+    fileSplits = fileSource.split("\n---\n")
 
     // Convert splits to map
     fileSplits = fileSplits.reduce(function(o, v, i) {
@@ -153,8 +153,9 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
       slidesToInclude = SourceCreator.prototype.mixrange(includeSlides)
     }
 
-    for (var i = slidesToInclude.length - 1; i >= 0; i--) {
-      fileSplits[slidesToInclude[i].toString()]["included"] = "included"
+    for (var i = 0; i < slidesToInclude.length; i++) {
+      // Array is 0 based but splits start at 1
+      fileSplits[(slidesToInclude[i] - 1).toString()]["included"] = "included"
     }
 
     // See if it exclude exists
@@ -162,8 +163,9 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
       // Split and add all
       slidesToExclude = SourceCreator.prototype.mixrange(excludeSlides)
 
-      for (var i = slidesToExclude.length - 1; i >= 0; i--) {
-        fileSplits[slidesToExclude[i].toString()]["included"] = "excluded"
+      for (var i = 0; i < slidesToInclude.length; i++) {
+        // Array is 0 based but splits start at 1
+        fileSplits[(slidesToExclude[i] - 1).toString()]["included"] = "excluded"
       }
     }
 
@@ -174,7 +176,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
     for (var i in fileSplits) {
       if (fileSplits[i]["included"] == "included") {
         if (first == false) {
-          toReturn += "---"
+          toReturn += "\n---\n"
         }
 
         toReturn += fileSplits[i]["slidetext"]
