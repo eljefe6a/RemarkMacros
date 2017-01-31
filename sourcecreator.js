@@ -147,7 +147,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
     // See if it include exists
     if (includeSlides == undefined) {
       // Add all if it doesn't exist
-      slidesToInclude = SourceCreator.prototype.range(1, fileSplits.length)
+      slidesToInclude = SourceCreator.prototype.range(1, Object.keys(fileSplits).length)
     } else {
       // Add specifically included slides
       slidesToInclude = SourceCreator.prototype.mixrange(includeSlides)
@@ -163,7 +163,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
       // Split and add all
       slidesToExclude = SourceCreator.prototype.mixrange(excludeSlides)
 
-      for (var i = 0; i < slidesToInclude.length; i++) {
+      for (var i = 0; i < slidesToExclude.length; i++) {
         // Array is 0 based but splits start at 1
         fileSplits[(slidesToExclude[i] - 1).toString()]["included"] = "excluded"
       }
