@@ -27,7 +27,7 @@ SourceStats.prototype.outputStats = function(slideshow, params) {
       // Reset sections
       SourceStats.prototype.chapters[currentChapter].sections = [];
       currentSection = -1;
-    } else if (template == "section") {
+    } else if (template == "section" || template == "sectionlist") {
       currentSection++;
 
       currentSlide = SourceStats.prototype.createSection(currentChapter, currentSection, slides[i].properties.name)

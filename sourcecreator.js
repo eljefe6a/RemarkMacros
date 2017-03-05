@@ -256,8 +256,9 @@ SourceCreator.prototype.addSections = function(fileSource, moduleFileName, class
   re = /template:\s+section\nname:\s+(.*)\n/g;
 
   var fileSource = fileSource.replace(re, function myFunction(match, group1) {
-    source = match + "\ntemplate: chapterorsectionlist\n"
-    source += "name: " + SourceCreator.prototype.currentChapter + "\n"
+    source = match + "\ntemplate: sectionlist\n"
+    source += "chaptername: " + SourceCreator.prototype.currentChapter + "\n"
+    source += "name: " + group1 + "\n"
     source += "![:showsections " + SourceCreator.prototype.currentChapter + ", " + group1 + "]\n"
     // Don't need to add a --- because the source of the regex already has one
     //source += "---\n"
@@ -277,7 +278,7 @@ SourceCreator.prototype.addChapters = function(fileSource) {
   var re = /template:\s+chapter\nname:\s+(.*)\n/;
 
   if ((m = re.exec(fileSource)) !== null) {
-    source = "\ntemplate: chapterorsectionlist\n"
+    source = "\ntemplate: chapterlist\n"
     source += "name: Course Chapters\n"
     source += "![:showchapters " + m[1] + "]\n"
     source += "---\n"
@@ -285,8 +286,6 @@ SourceCreator.prototype.addChapters = function(fileSource) {
 
     SourceCreator.prototype.currentChapter = m[1]
     SourceCreator.prototype.currentChapterNumber += 1
-
-    console.log(source)
 
     return source;
   }
