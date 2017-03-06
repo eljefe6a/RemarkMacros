@@ -6,37 +6,142 @@
 var SourceCreator = function () {
 };
 
+SourceCreator.prototype.classJSONUrl = "";
+SourceCreator.prototype.classJSON = null;
+SourceCreator.prototype.callbackfunction = null;
+SourceCreator.prototype.params = {};
+
 // Downloads the sourceUrls and returns the results in Remark format
-SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction) {
-  return createSource(classJSONUrl, false)
+SourceCreator.prototype.createSource = function() {
+  console.log("SourceCreator init")
 }
 
 // Downloads the sourceUrls and calls the second step
-SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, showChapters, showSections) {
+SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, params) {
+  SourceCreator.prototype.classJSONUrl = classJSONUrl;
+  SourceCreator.prototype.callbackfunction = callbackfunction;
+  SourceCreator.prototype.params = params;
+
   // Download class file
-  this.getFile(classJSONUrl, function(classfile) {
-    classJSON = JSON.parse(classfile)
+  DownloadManager.prototype.getFile(classJSONUrl, function(classfile) {
+    DownloadManager.prototype.classJSON = JSON.parse(classfile)
 
     // Set the class title
-    document.title = classJSON.classname
+    document.title = DownloadManager.prototype.classJSON.classname
 
-    classJSON.ajaxCall = []
+    var downloadManager = new DownloadManager();
 
     // Download all modules
-    for (var i = 0; i < classJSON.classmodules.length; i++) {
-      currentModule = classJSON.classmodules[i];
-
-      classJSON.ajaxCall[i] = $.ajax({
-      url: classJSON.classmodules[i].filename,
-      cache: false
-      })
+    for (var i = 0; i < DownloadManager.prototype.classJSON.classmodules.length; i++) {
+      downloadManager.addURL(DownloadManager.prototype.classJSON.classmodules[i].filename)
     }
 
+    downloadManager.downloadAll(SourceCreator.prototype.createSourceObj)
+
     // Add all modules for the class
-    $.when.apply($, classJSON.ajaxCall).done(function() {
-      SourceCreator.prototype.downloadAllModules(classJSON, callbackfunction, showChapters, showSections)
-    })
+    //$.when.apply($, DownloadManager.prototype.classJSON.ajaxCall).done(function() {
+    //  SourceCreator.prototype.downloadAllModules(DownloadManager.prototype.classJSON, callbackfunction, params)
+    //})
   })
+}
+
+SourceCreator.prototype.createSourceObj = function(urlToAjax) {
+  // Download all modules
+  sourceObj = {"headers": [], "chapters": []}
+
+  var currentChapter = null;
+  var currentSection = null;
+
+  for (var i = 0; i < DownloadManager.prototype.classJSON.classmodules.length; i++) {
+    slides = urlToAjax[DownloadManager.prototype.classJSON.classmodules[i].filename].responseText.split("\n---\n")
+
+    for (var j = 0; j < slides.length; j++) {
+      slide = SourceCreator.prototype.parseSlide(slides[j])
+
+      template = slide["header"]["template"]
+      layout = slide["header"]["layout"]
+
+      if (layout == "true") {
+        // A layout/header slide
+        sourceObj.headers.push(slide)
+      } else if (template == "title" || template == "titlewithsubtitle" || template == "chapter") {
+        currentChapter = slide
+
+        // Put slide at root
+        sourceObj.chapters.push(slide)
+        slide["sections"] = []
+
+        // Null out currentSection so it has to be set or created automatically
+        currentSection = null;
+      } else if (template == "section") {
+        currentSection = slide
+        currentChapter.sections.push(currentSection)
+        slide["slides"] = []
+      } else {
+        if (currentSection == null) {
+          // Some chapters and titles don't have sections. Create one.
+          currentSection = {
+            header: {"template": "section", "name": "section"},
+            privateheader: {"hidden": true},
+            contents: [],
+            notes: "",
+            slides: []
+          }
+
+          currentChapter.sections.push(currentSection)
+        }
+
+        // All other slide types
+        currentSection.slides.push(slide)
+      }
+    }
+  }
+
+  console.dir(sourceObj)
+}
+
+SourceCreator.prototype.parseSlide = function(slideText) {
+  slide = {
+    header: {},
+    privateheader: {},
+    contents: [],
+    notes: ""
+  }
+
+  isHeader = true
+
+  // Separate slide from notes
+  slideAndNotes = slideText.split("\n???\n")
+
+  // Verify there were actual notes
+  if (slideAndNotes.length == 2) {
+    slide.notes = slideAndNotes[1]
+  }
+
+  // Go through the rest line by line
+  slideLines = slideAndNotes[0].split("\n")
+
+  var m;
+  var re = /([a-z]*):\s?(.*)/;
+
+  for (var i = 0; i < slideLines.length; i++) {
+    // Skip any empty lines before the headers are found
+    if (slideLines[i].length == 0 && isHeader == true) {
+      continue;
+    }
+
+    if (isHeader == true && (m = re.exec(slideLines[i])) !== null) {
+      // Go through al key/value pairs in the header
+      slide.header[m[1]] = m[2]
+    } else {
+      // Now slide contents
+      isHeader = false
+
+      slide.contents.push(slideLines[i])
+    }
+  }
+
+  return slide
 }
 
 // Second step that goes through and downloads all modules.
@@ -291,18 +396,4 @@ SourceCreator.prototype.addChapters = function(fileSource) {
   }
 
   return ""
-}
-
-SourceCreator.prototype.getFile = function(url, callbackfunction) {
-  var jqxhr = $.ajax({
-  url: url,
-  cache: false
-  })
-  .done(function() {
-    callbackfunction(jqxhr.responseText)
-  })
-  .fail(function() {
-    console.log(url + " could not be found and added to source. Status code:" + 
-      jqxhr.status + " Response:\n\"" + jqxhr.responseText + "\"")
-  });
 }
