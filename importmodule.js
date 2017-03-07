@@ -36,10 +36,7 @@ ImportModule.prototype.addModules = function(urlToAjax) {
     // Splice in the new module
     chapter.sections = ImportModule.prototype.arraySplice(chapter.sections, moduleSections, sectionindex + 1)
   });
-
-  console.log("Modules")
-  console.dir(ImportModule.prototype.sourceObj)
-
+  
   ImportModule.prototype.callbackfunction(ImportModule.prototype.sourceObj)
 }
 

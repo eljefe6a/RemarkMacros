@@ -4,7 +4,7 @@ var SourceStats = function () {
 SourceStats.prototype.chapters = []
 
 // Outputs timings and stats
-SourceStats.prototype.outputStats = function(slideshow, params) {
+SourceStats.prototype.outputStats = function(slideshow, sourceObj, params) {
   // params["hoursPerDay"],
   //  params["demoMultiplier"], params["exerciseMultiplier"]
 
