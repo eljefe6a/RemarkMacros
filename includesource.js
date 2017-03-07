@@ -25,7 +25,6 @@ IncludeSource.prototype.importSources = function(sourceObj, callbackfunction) {
 
   IncludeSource.prototype.findIncludes(function(fileURL, includeLineNumbers, highlightLineNumbers, highlightCharacter, shouldTrimWhitespace, chapterindex, sectionindex, slideindex, slidecontentindex) {
     downloadManager.addURL(fileURL)
-    console.log("Downloading source:" + fileURL)
   });
 
   downloadManager.downloadAll(IncludeSource.prototype.addImports)

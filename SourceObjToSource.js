@@ -31,14 +31,14 @@ SourceObjToSource.prototype.finalizeSource = function(sourceObj, params) {
 
       for (var slideindex = 0; slideindex < sourceObj.chapters[chapterindex].sections[sectionindex].slides.length; slideindex++) {
         // Verify it is included
-        if (sourceObj.chapters[chapterindex].sections[sectionindex].slides[sectionindex].privateheader.included == true) {
-          source += SourceObjToSource.prototype.processSlide(sourceObj.chapters[chapterindex].sections[sectionindex].slides[sectionindex])
+        if (sourceObj.chapters[chapterindex].sections[sectionindex].slides[slideindex].privateheader.included == true) {
+          source += SourceObjToSource.prototype.processSlide(sourceObj.chapters[chapterindex].sections[sectionindex].slides[slideindex])
         }
       }
     }
   }
   
-  console.log(source)
+  //console.log(source)
   return source
 }
 

@@ -21,12 +21,24 @@ ImportModule.prototype.importModules = function(sourceObj, callbackfunction) {
 
 ImportModule.prototype.addModules = function(urlToAjax) {
   ImportModule.prototype.findModules(function(fileURL, chapter, section, slide, chapterindex, sectionindex, slideindex) {
+    // Get the module's slides
     moduleSections = ImportModule.prototype.addSlides(urlToAjax[fileURL].responseText)
+    
     // Delete the module include slide
-    delete section[slideindex]
-    // Splice in the new slides
+    section.slides.splice(slideindex, 1)
+
+    // Splice out the rest of the slides to be added to the new section
+    extractedSection = section.slides.splice(slideindex, section.slides.length)
+
+    // Add the rest of slides to the new module section
+    moduleSections[moduleSections.length - 1].slides = moduleSections[moduleSections.length - 1].slides.concat(extractedSection)
+    
+    // Splice in the new module
     chapter.sections = ImportModule.prototype.arraySplice(chapter.sections, moduleSections, sectionindex + 1)
   });
+
+  console.log("Modules")
+  console.dir(ImportModule.prototype.sourceObj)
 
   ImportModule.prototype.callbackfunction(ImportModule.prototype.sourceObj)
 }
@@ -86,11 +98,19 @@ ImportModule.prototype.findModules = function(callback) {
     for (var j = 0; j < ImportModule.prototype.sourceObj.chapters[i].sections.length; j++) {
       for (var k = 0; k < ImportModule.prototype.sourceObj.chapters[i].sections[j].slides.length; k++) {
         // Go through slide contents
-        for (var slideindex = 0; slideindex < ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].contents.length; slideindex++) {
-          if (ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].privateheader.include == true) {
-            if ((m = re.exec(ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].contents[slideindex])) !== null) {
-              // Callback now that we've found a module
-              callback(m[1], ImportModule.prototype.sourceObj.chapters[i], ImportModule.prototype.sourceObj.chapters[i].sections[j], ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k], i, j, k)
+
+        // As slides are moved, subsequent slides can become undefined. Check for this
+        // and basic slide inclusion.
+        if ((typeof ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k] !== "undefined") && ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].privateheader.included == true) {
+          for (var slideindex = 0; slideindex < ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].contents.length; slideindex++) {
+            // As slides are moved, subsequent slides can become undefined. Check for this
+            // and basic slide inclusion.
+            if ((typeof ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k] !== "undefined") && ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].privateheader.included == true) {
+              if ((m = re.exec(ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].contents[slideindex])) !== null) {
+                // Callback now that we've found a module
+                callback(m[1], ImportModule.prototype.sourceObj.chapters[i], ImportModule.prototype.sourceObj.chapters[i].sections[j], ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k], i, j, k)
+                break;
+              }
             }
           }
         }
