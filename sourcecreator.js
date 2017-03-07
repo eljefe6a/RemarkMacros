@@ -4,44 +4,34 @@
 // Can be used with ![:includemodule path/to/module.md]
 
 var SourceCreator = function () {
+  console.log("Started SourceCreator")
 };
 
-SourceCreator.prototype.classJSONUrl = "";
 SourceCreator.prototype.classJSON = null;
 SourceCreator.prototype.callbackfunction = null;
 SourceCreator.prototype.params = {};
 
-// Downloads the sourceUrls and returns the results in Remark format
-SourceCreator.prototype.createSource = function() {
-  console.log("SourceCreator init")
-}
-
 // Downloads the sourceUrls and calls the second step
-SourceCreator.prototype.createSource = function(classJSONUrl, callbackfunction, params) {
-  SourceCreator.prototype.classJSONUrl = classJSONUrl;
+SourceCreator.prototype.createSource = function(params, callbackfunction) {
   SourceCreator.prototype.callbackfunction = callbackfunction;
   SourceCreator.prototype.params = params;
 
   // Download class file
-  DownloadManager.prototype.getFile(classJSONUrl, function(classfile) {
-    DownloadManager.prototype.classJSON = JSON.parse(classfile)
+  DownloadManager.prototype.getFile(SourceCreator.prototype.params["url"], function(classfile) {
+    SourceCreator.prototype.classJSON = JSON.parse(classfile)
 
     // Set the class title
-    document.title = DownloadManager.prototype.classJSON.classname
+    document.title = SourceCreator.prototype.classJSON.classname
 
     var downloadManager = new DownloadManager();
 
     // Download all modules
-    for (var i = 0; i < DownloadManager.prototype.classJSON.classmodules.length; i++) {
-      downloadManager.addURL(DownloadManager.prototype.classJSON.classmodules[i].filename)
+    for (var i = 0; i < SourceCreator.prototype.classJSON.classmodules.length; i++) {
+      downloadManager.addURL(SourceCreator.prototype.classJSON.classmodules[i].filename)
+      console.log("Downloading class module:" + SourceCreator.prototype.classJSON.classmodules[i].filename)
     }
 
     downloadManager.downloadAll(SourceCreator.prototype.createSourceObj)
-
-    // Add all modules for the class
-    //$.when.apply($, DownloadManager.prototype.classJSON.ajaxCall).done(function() {
-    //  SourceCreator.prototype.downloadAllModules(DownloadManager.prototype.classJSON, callbackfunction, params)
-    //})
   })
 }
 
@@ -52,8 +42,8 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
   var currentChapter = null;
   var currentSection = null;
 
-  for (var i = 0; i < DownloadManager.prototype.classJSON.classmodules.length; i++) {
-    slides = urlToAjax[DownloadManager.prototype.classJSON.classmodules[i].filename].responseText.split("\n---\n")
+  for (var i = 0; i < SourceCreator.prototype.classJSON.classmodules.length; i++) {
+    slides = urlToAjax[SourceCreator.prototype.classJSON.classmodules[i].filename].responseText.split("\n---\n")
 
     for (var j = 0; j < slides.length; j++) {
       slide = SourceCreator.prototype.parseSlide(slides[j])
@@ -95,20 +85,22 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
         currentSection.slides.push(slide)
       }
     }
-  }
+
+    // NOTE: This assumes a module doesn't have more than one chapter
+    SourceCreator.prototype.processIncludeAndExclude(currentChapter, SourceCreator.prototype.classJSON.classmodules[i])  
+  }  
 
   console.dir(sourceObj)
+  SourceCreator.prototype.callbackfunction(sourceObj)
 }
 
 SourceCreator.prototype.parseSlide = function(slideText) {
   slide = {
     header: {},
-    privateheader: {},
+    privateheader: {"included": true},
     contents: [],
     notes: ""
   }
-
-  isHeader = true
 
   // Separate slide from notes
   slideAndNotes = slideText.split("\n???\n")
@@ -122,21 +114,14 @@ SourceCreator.prototype.parseSlide = function(slideText) {
   slideLines = slideAndNotes[0].split("\n")
 
   var m;
-  var re = /([a-z]*):\s?(.*)/;
+  var re = /^([a-z]+):\s?(.+)$/;
 
   for (var i = 0; i < slideLines.length; i++) {
-    // Skip any empty lines before the headers are found
-    if (slideLines[i].length == 0 && isHeader == true) {
-      continue;
-    }
-
-    if (isHeader == true && (m = re.exec(slideLines[i])) !== null) {
+    if ((m = re.exec(slideLines[i])) !== null) {
       // Go through al key/value pairs in the header
       slide.header[m[1]] = m[2]
     } else {
       // Now slide contents
-      isHeader = false
-
       slide.contents.push(slideLines[i])
     }
   }
@@ -144,123 +129,46 @@ SourceCreator.prototype.parseSlide = function(slideText) {
   return slide
 }
 
-// Second step that goes through and downloads all modules.
-SourceCreator.prototype.downloadAllModules = function(classJSON, callbackfunction, showChapters, showSections) {
-  allModuleAjaxCalls = []
-  classJSON.modules = {}
-
-  for (var i = 0; i < classJSON.classmodules.length; i++) {
-    fileSource = classJSON.ajaxCall[i].responseText
-    
-    // Concat that module's Ajax calls together
-    ajaxCalls = SourceCreator.prototype.downloadModule(classJSON, fileSource, classJSON.classmodules[i].filename)
-    allModuleAjaxCalls = allModuleAjaxCalls.concat(ajaxCalls)
-  }
-
-  $.when.apply($, allModuleAjaxCalls).done(function() {
-    SourceCreator.prototype.finalizeSource(classJSON, callbackfunction, showChapters, showSections)
-  })
-}
-
-// Goes through all source and downloads the modules.
-SourceCreator.prototype.downloadModule = function(classJSON, fileSource, moduleFileName) {
-  // Import any includemodule
-  var m;
-  var re = /!\[:includemodule (.*)\]\n/g;
-
-  ajaxCalls = []
-  
-  classJSON.modules[moduleFileName] = {}
-  classJSON.modules[moduleFileName].file = {}
-
-  // Keep on running Regex until all includemodule are found
-  while ((m = re.exec(fileSource)) !== null) {
-    ajaxCall = $.ajax({
-    url: m[1],
-    cache: false
-    })
-    ajaxCalls.push(ajaxCall)
-    classJSON.modules[moduleFileName].file[m[1]] = ajaxCall;
-
-    console.log("Importing module: " + m[1] + " for " + moduleFileName)
-  }
-
-  return ajaxCalls
-}
-
-// The final step in the callback hell. Adds modules.
-SourceCreator.prototype.finalizeSource = function(classJSON, callbackfunction, showChapters, showSections) {
-  var source = ""
-
-  for (var i = 0; i < classJSON.classmodules.length; i++) {
-    fileSource = classJSON.ajaxCall[i].responseText
-
-    fileSource = SourceCreator.prototype.processIncludeAndExclude(fileSource, classJSON.classmodules[i], classJSON)
-
-    moduleSource = ""
-
-    if (showChapters == true) {
-      moduleSource += SourceCreator.prototype.addChapters(fileSource)
-    }
-
-    moduleSource += SourceCreator.prototype.importModule(fileSource, classJSON.classmodules[i].filename, classJSON)
-
-    if (showSections == true) {
-      moduleSource = SourceCreator.prototype.addSections(moduleSource, classJSON.classmodules[i].filename, classJSON)
-    }
-
-    // Files shouldn't have --- at the head or foot
-    // It is added automatically here
-    if (i + 1 < classJSON.classmodules.length) {
-      moduleSource += "\n---\n"
-    }
-
-    source += moduleSource
-  }
-
-  //console.log(source)
-
-  // All modules downloaded, callback to function that we're done
-  callbackfunction(source)
-}
-
 // If there is an include or exclude, process them
-SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleInfo, classJSON) {
+SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo) {
   includeSlides = moduleInfo["include"];
   excludeSlides = moduleInfo["exclude"];
 
   // Include and excludes are optional. Check if they're there.
   if (includeSlides == undefined && excludeSlides == undefined) {
     // Neither defined. Return as is
-    return fileSource
+    return
   } else {
-    // Split file into slides
-    fileSplits = fileSource.split("\n---\n")
-
-    // Convert splits to map
-    fileSplits = fileSplits.reduce(function(o, v, i) {
-      valuesMap = {}
-      valuesMap["slidetext"] = v
-      valuesMap["included"] = "unknown"
-
-      o[i.toString()] = valuesMap;
-      return o;
-    }, {});
-
     slidesToInclude = []
+    slidesToExclude = []
 
     // See if it include exists
-    if (includeSlides == undefined) {
-      // Add all if it doesn't exist
-      slidesToInclude = SourceCreator.prototype.range(1, Object.keys(fileSplits).length)
-    } else {
+    if (includeSlides != undefined) {
       // Add specifically included slides
       slidesToInclude = SourceCreator.prototype.mixrange(includeSlides)
-    }
 
-    for (var i = 0; i < slidesToInclude.length; i++) {
-      // Array is 0 based but splits start at 1
-      fileSplits[(slidesToInclude[i] - 1).toString()]["included"] = "included"
+      currentSlideNumber = 0
+
+      for (var i = 0; chapter.sections.length; i++) {
+        currentSlideNumber++
+        
+        // Array is 0 based but splits start at 1
+        if (!slidesToInclude.includes[currentSlideNumber + 1]) {
+          // Everything is included by default
+          chapter.sections[i].privateheader.included = false
+        }
+
+        // Now go through slides
+        for(var j = 0; chapter.sections[i].length; j++) {
+          currentSlideNumber++
+        
+          // Array is 0 based but splits start at 1
+          if (!slidesToInclude.includes[currentSlideNumber + 1]) {
+            // Everything is included by default
+            chapter.sections[i].slides[j].privateheader.included = false
+          }
+        }
+      }
     }
 
     // See if it exclude exists
@@ -268,29 +176,27 @@ SourceCreator.prototype.processIncludeAndExclude = function(fileSource, moduleIn
       // Split and add all
       slidesToExclude = SourceCreator.prototype.mixrange(excludeSlides)
 
-      for (var i = 0; i < slidesToExclude.length; i++) {
+      for (var i = 0; chapter.sections.length; i++) {
+        currentSlideNumber++
+        
         // Array is 0 based but splits start at 1
-        fileSplits[(slidesToExclude[i] - 1).toString()]["included"] = "excluded"
-      }
-    }
-
-    // Reassemble the slides with the includes and excludes
-    toReturn = ""
-    var first = true
-
-    for (var i in fileSplits) {
-      if (fileSplits[i]["included"] == "included") {
-        if (first == false) {
-          toReturn += "\n---\n"
+        if (slidesToExclude.includes[currentSlideNumber + 1]) {
+          // Everything is included by default
+          chapter.sections[i].privateheader.included = false
         }
 
-        toReturn += fileSplits[i]["slidetext"]
-
-        first = false
+        // Now go through slides
+        for(var j = 0; chapter.sections[i].length; j++) {
+          currentSlideNumber++
+        
+          // Array is 0 based but splits start at 1
+          if (slidesToExclude.includes[currentSlideNumber + 1]) {
+            // Everything is included by default
+            chapter.sections[i].slides[j].privateheader.included = false
+          }
+        }
       }
     }
-
-    return toReturn
   }
 }
 
@@ -339,61 +245,3 @@ SourceCreator.prototype.range = function(start, stop, step){
   };
   return result;
 };
-
-// Now that file is downloaded, replaces includemodule with the module
-SourceCreator.prototype.importModule = function(fileSource, moduleFileName, classJSON) {
-  // Import any includemodule
-  var m;
-  var re = /!\[:includemodule (.*)\]\n/;
-
-  // Keep on running Regex until all includemodule are replaced
-  // with their module contents
-  while ((m = re.exec(fileSource)) !== null) {
-    fileSource = fileSource.replace(m[0], classJSON.modules[moduleFileName].file[m[1]].responseText)
-  }
-
-  return fileSource
-}
-
-// Create sections
-SourceCreator.prototype.addSections = function(fileSource, moduleFileName, classJSON) {
-  // Add the section macro
-  re = /template:\s+section\nname:\s+(.*)\n/g;
-
-  var fileSource = fileSource.replace(re, function myFunction(match, group1) {
-    source = match + "\ntemplate: sectionlist\n"
-    source += "chaptername: " + SourceCreator.prototype.currentChapter + "\n"
-    source += "name: " + group1 + "\n"
-    source += "![:showsections " + SourceCreator.prototype.currentChapter + ", " + group1 + "]\n"
-    // Don't need to add a --- because the source of the regex already has one
-    //source += "---\n"
-
-    return source;
-  });
-
-  return fileSource
-}
-
-SourceCreator.prototype.currentChapter = ""
-SourceCreator.prototype.currentChapterNumber = 1
-
-SourceCreator.prototype.addChapters = function(fileSource) {
-  // Add the chapters macro
-  var m;
-  var re = /template:\s+chapter\nname:\s+(.*)\n/;
-
-  if ((m = re.exec(fileSource)) !== null) {
-    source = "\ntemplate: chapterlist\n"
-    source += "name: Course Chapters\n"
-    source += "![:showchapters " + m[1] + "]\n"
-    source += "---\n"
-    source += "chapternumber: " + SourceCreator.prototype.currentChapterNumber + "\n"
-
-    SourceCreator.prototype.currentChapter = m[1]
-    SourceCreator.prototype.currentChapterNumber += 1
-
-    return source;
-  }
-
-  return ""
-}
