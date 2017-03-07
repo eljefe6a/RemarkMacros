@@ -1,5 +1,4 @@
 var DownloadManager = function () {
-  console.log("Started DownloadManager")
 };
 
 DownloadManager.prototype.getFile = function(url, callbackfunction) {

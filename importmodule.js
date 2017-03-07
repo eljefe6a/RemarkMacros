@@ -87,9 +87,11 @@ ImportModule.prototype.findModules = function(callback) {
       for (var k = 0; k < ImportModule.prototype.sourceObj.chapters[i].sections[j].slides.length; k++) {
         // Go through slide contents
         for (var slideindex = 0; slideindex < ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].contents.length; slideindex++) {
-          if ((m = re.exec(ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].contents[slideindex])) !== null) {
-            // Callback now that we've found a module
-            callback(m[1], ImportModule.prototype.sourceObj.chapters[i], ImportModule.prototype.sourceObj.chapters[i].sections[j], ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k], i, j, k)
+          if (ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].privateheader.include == true) {
+            if ((m = re.exec(ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k].contents[slideindex])) !== null) {
+              // Callback now that we've found a module
+              callback(m[1], ImportModule.prototype.sourceObj.chapters[i], ImportModule.prototype.sourceObj.chapters[i].sections[j], ImportModule.prototype.sourceObj.chapters[i].sections[j].slides[k], i, j, k)
+            }
           }
         }
       }
