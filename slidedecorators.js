@@ -3,7 +3,7 @@ var SlideDecorators = function () {
   console.log("Started SlideDecorators")
 };
 
-SlideDecorators.prototype.decorateChapterList = function(currentSlideSource, sourceObj, chapter, params) {
+SlideDecorators.prototype.decorateChapterList = function(currentSlideSource, sourceObj, chapter, globalDecorators, params) {
   if (params.showChapters == true && chapter.header.template != "title") {
     // Output chapter list
     source = "\ntemplate: chapterlist\n"
@@ -27,23 +27,27 @@ SlideDecorators.prototype.decorateChapterList = function(currentSlideSource, sou
       source += ">" + sourceObj.chapters[i].header.name + "</li>"
     }
 
-    source += "</ul>\n---\n"
+    source += "</ul>\n"
 
-    return source + currentSlideSource
+    // Run the global decorators on the newly added slide
+    for (var i = 0; i < globalDecorators.length; i++) {
+      source = globalDecorators[i](source, sourceObj, chapter, params)
+    }
+
+    return source + "---\n" + currentSlideSource
   } else {
     return currentSlideSource
   }
 }
 
-SlideDecorators.prototype.decorateChapterNumber = function(currentSlideSource, sourceObj, chapter, params) {
+SlideDecorators.prototype.decorateChapterNumber = function(currentSlideSource, sourceObj, chapter, globalDecorators, params) {
   // Prepend chapter number
   // Chapter index is zero based
-  source = "chapternumber: " + (sourceObj.chapters.indexOf(chapter) + 1) + "\n" + currentSlideSource
-  console.log(source)
+  source = "chapternumber: " + (sourceObj.chapters.indexOf(chapter) + 1 + params["chapternumberoffset"]) + "\n" + currentSlideSource
   return source
 }
 
-SlideDecorators.prototype.decorateSection = function(currentSlideSource, sourceObj, chapter, section, params) {
+SlideDecorators.prototype.decorateSection = function(currentSlideSource, sourceObj, chapter, section, globalDecorators, params) {
   if (params.showSections == true) {
     // Output chapter list
     source = "\ntemplate: sectionlist\n"
@@ -63,11 +67,14 @@ SlideDecorators.prototype.decorateSection = function(currentSlideSource, sourceO
       source += ">" + chapter.sections[i].header.name + "</li>"
     }
 
-    source += "</ul>\n---\n"
+    source += "</ul>\n"
 
-    console.log(source + currentSlideSource)
+    // Run the global decorators on the newly added slide
+    for (var i = 0; i < globalDecorators.length; i++) {
+      source = globalDecorators[i](source, sourceObj, section, params)
+    }
 
-    return source + currentSlideSource
+    return source + "---\n" + currentSlideSource
   } else {
     return currentSlideSource
   }
@@ -75,4 +82,10 @@ SlideDecorators.prototype.decorateSection = function(currentSlideSource, sourceO
 
 SlideDecorators.prototype.decorateSlide = function(currentSlideSource, sourceObj, chapter, section, slide, params) {
 
+}
+
+SlideDecorators.prototype.globalVersionDecorator = function(currentSlideSource, sourceObj, slide, params) {
+  // Prepend version number
+  source = "version: " + params["version"].shortcommitid + "\n" + currentSlideSource
+  return source
 }
