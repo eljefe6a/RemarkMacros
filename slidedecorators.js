@@ -89,3 +89,9 @@ SlideDecorators.prototype.globalVersionDecorator = function(currentSlideSource, 
   source = "version: " + params["version"].shortcommitid + "\n" + currentSlideSource
   return source
 }
+
+SlideDecorators.prototype.globalCopyrightDecorator = function(currentSlideSource, sourceObj, slide, params) {
+  // Prepend version number
+  source = "copyright: " + params["copyright"] + "\n" + currentSlideSource
+  return source
+}
