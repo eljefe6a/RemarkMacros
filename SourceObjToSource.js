@@ -58,16 +58,20 @@ SourceObjToSource.prototype.processSlide = function(slide, params) {
   return SourceObjToSource.prototype.simpleSlide(slide, params)
 }
 
-SourceObjToSource.prototype.simpleSlide = function(sourceObj, params) {
+SourceObjToSource.prototype.simpleSlide = function(slide, params) {
+  if (slide.privateheader.hidden == true) {
+    return ""
+  }
+
   slideText = ""
 
-  for(var key in sourceObj.header) {
-    slideText += key + ": " + sourceObj.header[key];
+  for(var key in slide.header) {
+    slideText += key + ": " + slide.header[key];
     slideText += "\n"
   }
 
-  for (var contextindex = 0; contextindex < sourceObj.contents.length; contextindex++) {
-    slideText += sourceObj.contents[contextindex];
+  for (var contextindex = 0; contextindex < slide.contents.length; contextindex++) {
+    slideText += slide.contents[contextindex];
     slideText += "\n"
   }
 
