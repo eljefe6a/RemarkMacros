@@ -90,7 +90,6 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
     SourceCreator.prototype.processIncludeAndExclude(currentChapter, SourceCreator.prototype.classJSON.classmodules[i])  
   }  
 
-  console.dir(sourceObj)
   SourceCreator.prototype.callbackfunction(sourceObj)
 }
 
