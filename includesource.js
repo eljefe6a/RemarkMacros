@@ -1,27 +1,47 @@
 /*
 In the Markdown:
-
+!\[:includesource (\w*\.\w*), ([0-9\- ]*), ([0-9\- ]*), (.*), (.*)\]
 ![:includesource Class.java]
 Will include Class.java with source code and add the code block with the file extension "java"
 
 ![:includesource Class.java, 2-4, 3, *]
 Will include lines 2 to 4 from Class.java and highlight line 3 with an *
 
-![:includesource Class.java, 2-4, 3 4, * trim]
+![:includesource Class.java, 2-4, 3 4, *, trim]
 Will include lines 2 to 4 from Class.java and highlight lines 3 and 4 with an * then trim the whitespace to the minimum needed for lines 2 to 4.
 */
-var IncludeSourceMacro = function () {
-  var includeSourceMacro = this
-
-  remark.macros.includesource = function () {
-    return includeSourceMacro.addFile(arguments[0],arguments[1],arguments[2],arguments[3],arguments[4]);
-  };
-
-  console.log("Added include macros")
+var IncludeSource = function () {
+  console.log("Started IncludeSource")
 };
 
+IncludeSource.prototype.sourceObj = null;
+IncludeSource.prototype.callbackfunction = null;
+
+IncludeSource.prototype.importSources = function(sourceObj, callbackfunction) {
+  IncludeSource.prototype.sourceObj = sourceObj
+  IncludeSource.prototype.callbackfunction = callbackfunction
+
+  downloadManager = new DownloadManager();
+
+  IncludeSource.prototype.findIncludes(function(fileURL, includeLineNumbers, highlightLineNumbers, highlightCharacter, shouldTrimWhitespace, chapterindex, sectionindex, slideindex, slidecontentindex) {
+    downloadManager.addURL(fileURL)
+    console.log("Downloading source:" + fileURL)
+  });
+
+  downloadManager.downloadAll(IncludeSource.prototype.addImports)
+}
+
+IncludeSource.prototype.addImports = function(urlToAjax) {
+  IncludeSource.prototype.findIncludes(function(fileURL, includeLineNumbers, highlightLineNumbers, highlightCharacter, shouldTrimWhitespace, chapterindex, sectionindex, slideindex, slidecontentindex) {
+    // Delete the module include slide
+    ImportModule.prototype.sourceObj.chapters[chapterindex].sections[sectionindex].slides[slideindex].contents[slidecontentindex] = IncludeSource.prototype.addFile(urlToAjax[fileURL], fileURL, includeLineNumbers, highlightLineNumbers, highlightCharacter, shouldTrimWhitespace, slide, slidecontentindex)
+  });
+
+  IncludeSource.prototype.callbackfunction(IncludeSource.prototype.sourceObj)
+}
+
 // Adds a file by parsing the !INCLUDE
-IncludeSourceMacro.prototype.addFile = function(filename,includeLineNumbers,highlightLineNumbers,highlightCharacter,shouldTrimWhitespace) {
+IncludeSource.prototype.addFile = function(ajax, filename,includeLineNumbers,highlightLineNumbers,highlightCharacter,shouldTrimWhitespace) {
   includeLineNumbersArray = []
   highlightLineNumbersArray = []
 
@@ -47,32 +67,32 @@ IncludeSourceMacro.prototype.addFile = function(filename,includeLineNumbers,high
 
   console.log("Including source: " + filename + " lines:" + includeLineNumbers + " highlight:" + highlightLineNumbers + " character:" + highlightCharacter + " trim:" + shouldTrimWhitespace)
 
-  return this.processIncludeLine(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace)
+  return this.processIncludeLine(ajax, filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace)
 }
 
 // Does some initial checking on the file and either adds an error
 // or the source code
-IncludeSourceMacro.prototype.processIncludeLine = function(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace) {
+IncludeSource.prototype.processIncludeLine = function(ajax, filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace) {
   // Check if the file was downloaded correctly
-  if (IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].statusText != "OK") {
+  if (ajax.statusText != "OK") {
     // It wasn't downloaded correctly. Change the text to
     // JQuery's string of the error
-    return "```\n" + IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].statusText + "\n```"
+    return "```\n" + ajax.statusText + "\n```"
   } else {
     // It was downloaded correctly, add the source code
-    return this.handleIncludeLine(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace)
+    return this.handleIncludeLine(ajax, filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace)
   }
 }
 
 // Adds the lines, and highlights the lines
-IncludeSourceMacro.prototype.handleIncludeLine = function(filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace) {
+IncludeSource.prototype.handleIncludeLine = function(ajax, filename, includeLineNumbersArray, highlightLineNumbersArray, highlightCharacter, shouldTrimWhitespace) {
   currentLineNumber = 1
 
   fileExtension = this.getFileExtension(filename)
   output = "```" + fileExtension + "\n"
 
   // File already downloaded, get it out of memory
-  var fileSource = IncludeSourceMacro.prototype.allIncludeAjaxCalls[filename].responseText;
+  var fileSource = ajax.responseText;
 
   var fileSplit = fileSource.split("\n")
 
@@ -134,7 +154,7 @@ IncludeSourceMacro.prototype.handleIncludeLine = function(filename, includeLineN
 }
 
 // Downloads the file, adds the lines, and highlights the lines
-IncludeSourceMacro.prototype.getFileExtension = function(filename) {
+IncludeSource.prototype.getFileExtension = function(filename) {
   fileExtension = filename.substr(filename.lastIndexOf(".") + 1, filename.length)
 
   if (fileExtension == "hql") {
@@ -146,7 +166,7 @@ IncludeSourceMacro.prototype.getFileExtension = function(filename) {
 }
 
 // Calculates the minimum whitespace in the included lines
-IncludeSourceMacro.prototype.calculateMinWhitespace = function(fileSplit, includeLineNumbersArray) {
+IncludeSource.prototype.calculateMinWhitespace = function(fileSplit, includeLineNumbersArray) {
   whitespaceCurrentLineNumber = 1
 
   currentMin = Number.MAX_VALUE
@@ -177,7 +197,7 @@ IncludeSourceMacro.prototype.calculateMinWhitespace = function(fileSplit, includ
 }
 
 // Gets the ranges to include
-IncludeSourceMacro.prototype.mixrange = function(s) {
+IncludeSource.prototype.mixrange = function(s) {
   r = []
 
   var rangeSplit = s.split(" ")
@@ -203,7 +223,7 @@ IncludeSourceMacro.prototype.mixrange = function(s) {
 }
 
 // Gets an array based on the array
-IncludeSourceMacro.prototype.range = function(start, stop, step){
+IncludeSource.prototype.range = function(start, stop, step){
   if (typeof stop=='undefined'){
       // one param defined
       stop = start;
@@ -223,11 +243,11 @@ IncludeSourceMacro.prototype.range = function(start, stop, step){
 };
 
 // Map of URL to ajax call object
-IncludeSourceMacro.prototype.allIncludeAjaxCalls = {};
+IncludeSource.prototype.allIncludeAjaxCalls = {};
 
 // First step that goes through and downloads all includes.
-IncludeSourceMacro.prototype.downloadAllIncludes = function(source, callbackfunction) {
-  ajaxCalls = IncludeSourceMacro.prototype.downloadIncludes(source)
+IncludeSource.prototype.downloadAllIncludes = function(source, callbackfunction) {
+  ajaxCalls = IncludeSource.prototype.downloadIncludes(source)
   
   if (ajaxCalls === undefined) {
     // There weren't any Ajax calls in the source.
@@ -244,7 +264,7 @@ IncludeSourceMacro.prototype.downloadAllIncludes = function(source, callbackfunc
 }
 
 // Goes through all source and downloads the includes.
-IncludeSourceMacro.prototype.downloadIncludes = function(source) {
+IncludeSource.prototype.downloadIncludes = function(source) {
   // Import any includemodule
   var m;
   var re = /!\[:includesource (.*?)[\],]/g;
@@ -256,7 +276,7 @@ IncludeSourceMacro.prototype.downloadIncludes = function(source) {
     // See if the file was already downloaded
     sourceFilePath = m[1]
 
-    if (!(sourceFilePath in IncludeSourceMacro.prototype.allIncludeAjaxCalls)) {
+    if (!(sourceFilePath in IncludeSource.prototype.allIncludeAjaxCalls)) {
       ajaxCall = $.ajax({
         url: sourceFilePath,
         originalUrl: sourceFilePath,
@@ -271,15 +291,15 @@ IncludeSourceMacro.prototype.downloadIncludes = function(source) {
       })
 
       ajaxCalls.push(ajaxCall)
-      IncludeSourceMacro.prototype.allIncludeAjaxCalls[sourceFilePath] = ajaxCall
+      IncludeSource.prototype.allIncludeAjaxCalls[sourceFilePath] = ajaxCall
     }
   }
 
-  return IncludeSourceMacro.prototype.some(ajaxCalls)
+  return IncludeSource.prototype.some(ajaxCalls)
 }
 
 // From http://stackoverflow.com/a/23625847
-IncludeSourceMacro.prototype.some = function(promises) {
+IncludeSource.prototype.some = function(promises) {
   var d = $.Deferred(), results = [];
   var remaining = promises.length;
   for(var i = 0; i < promises.length; i++){
@@ -300,5 +320,28 @@ IncludeSourceMacro.prototype.some = function(promises) {
   } else {
     // There were Ajax calls. Return a promise on the remaining values
     return d.promise();
+  }
+}
+
+
+IncludeSource.prototype.findIncludes = function(callback) {
+  // Import any includemodule
+  var m;
+  var re = /!\[:includesource (.*\w*\.\w*)(, ([0-9\- ]*)(, ([0-9\- ]*)(, (\*)(, (.*))?)?)?)?\]/;
+
+  for (var i = 0; i < IncludeSource.prototype.sourceObj.chapters.length; i++) {
+    for (var j = 0; j < IncludeSource.prototype.sourceObj.chapters[i].sections.length; j++) {
+      for (var k = 0; k < IncludeSource.prototype.sourceObj.chapters[i].sections[j].slides.length; k++) {
+        // Go through slide contents
+        for (var slidecontentindex = 0; slidecontentindex < IncludeSource.prototype.sourceObj.chapters[i].sections[j].slides[k].contents.length; slidecontentindex++) {
+          if (IncludeSource.prototype.sourceObj.chapters[i].sections[j].slides[k].privateheader.included == true) {
+            if ((m = re.exec(IncludeSource.prototype.sourceObj.chapters[i].sections[j].slides[k].contents[slidecontentindex])) !== null) {
+              // Callback now that we've found a module
+              callback(m[1], m[3], m[5], m[7], m[9], i, j, k, slidecontentindex)
+            }
+          }
+        }
+      }
+    }
   }
 }
