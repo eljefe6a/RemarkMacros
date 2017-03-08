@@ -152,7 +152,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
         currentSlideNumber++
         
         // Array is 0 based but splits start at 1
-        if (!slidesToInclude.includes(currentSlideNumber + 1)) {
+        if (slidesToInclude.indexOf(currentSlideNumber + 1) == -1) {
           // Everything is included by default
           chapter.sections[i].privateheader.included = false
         }
@@ -162,7 +162,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
           currentSlideNumber++
         
           // Array is 0 based but splits start at 1
-          if (!slidesToInclude.includes(currentSlideNumber + 1)) {
+          if (slidesToInclude.indexOf(currentSlideNumber + 1) == -1) {
             // Everything is included by default
             chapter.sections[i].slides[j].privateheader.included = false
           }
@@ -181,7 +181,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
         currentSlideNumber++
 
         // Array is 0 based but splits start at 1
-        if (slidesToExclude.includes(currentSlideNumber + 1)) {
+        if (slidesToExclude.indexOf(currentSlideNumber + 1) != -1) {
           // Everything is included by default
           chapter.sections[i].privateheader.included = false
         }
@@ -191,7 +191,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
           currentSlideNumber++
         
           // Array is 0 based but splits start at 1
-          if (slidesToExclude.includes(currentSlideNumber + 1)) {
+          if (slidesToExclude.indexOf(currentSlideNumber + 1) != -1) {
             // Everything is included by default
             chapter.sections[i].slides[j].privateheader.included = false
           }
