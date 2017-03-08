@@ -152,7 +152,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
         currentSlideNumber++
         
         // Array is 0 based but splits start at 1
-        if (!slidesToInclude.includes[currentSlideNumber + 1]) {
+        if (!slidesToInclude.includes(currentSlideNumber + 1)) {
           // Everything is included by default
           chapter.sections[i].privateheader.included = false
         }
@@ -162,7 +162,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
           currentSlideNumber++
         
           // Array is 0 based but splits start at 1
-          if (!slidesToInclude.includes[currentSlideNumber + 1]) {
+          if (!slidesToInclude.includes(currentSlideNumber + 1)) {
             // Everything is included by default
             chapter.sections[i].slides[j].privateheader.included = false
           }
@@ -175,21 +175,23 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
       // Split and add all
       slidesToExclude = SourceCreator.prototype.mixrange(excludeSlides)
 
-      for (var i = 0; chapter.sections.length; i++) {
+      currentSlideNumber = 0
+
+      for (var i = 0; i < chapter.sections.length; i++) {
         currentSlideNumber++
-        
+
         // Array is 0 based but splits start at 1
-        if (slidesToExclude.includes[currentSlideNumber + 1]) {
+        if (slidesToExclude.includes(currentSlideNumber + 1)) {
           // Everything is included by default
           chapter.sections[i].privateheader.included = false
         }
 
         // Now go through slides
-        for(var j = 0; chapter.sections[i].length; j++) {
+        for(var j = 0; j < chapter.sections[i].slides.length; j++) {
           currentSlideNumber++
         
           // Array is 0 based but splits start at 1
-          if (slidesToExclude.includes[currentSlideNumber + 1]) {
+          if (slidesToExclude.includes(currentSlideNumber + 1)) {
             // Everything is included by default
             chapter.sections[i].slides[j].privateheader.included = false
           }
