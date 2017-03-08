@@ -148,7 +148,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
 
       currentSlideNumber = 0
 
-      for (var i = 0; chapter.sections.length; i++) {
+      for (var i = 0; i < chapter.sections.length; i++) {
         currentSlideNumber++
         
         // Array is 0 based but splits start at 1
@@ -158,7 +158,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
         }
 
         // Now go through slides
-        for(var j = 0; chapter.sections[i].length; j++) {
+        for(var j = 0; j < chapter.sections[i].slides.length; j++) {
           currentSlideNumber++
         
           // Array is 0 based but splits start at 1

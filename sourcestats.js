@@ -90,6 +90,10 @@ SourceStats.prototype.displayChapters = function(sourceObj, params) {
   for (var i = 0; i < sourceObj.chapters.length; i++) {
     chapter = sourceObj.chapters[i]
 
+    if (chapter.privateheader.included == false) {
+      continue;
+    }
+
     totalSlides += chapter.privateheader.chapterRegular
     totalDemo += chapter.privateheader.chapterDemoMinutes
     totalExercise += chapter.privateheader.chapterExerciseMinutes
@@ -118,6 +122,10 @@ SourceStats.prototype.displayChapters = function(sourceObj, params) {
     if (params["outputSections"] == true) {
       for (var j = 0; j < chapter.sections.length; j++) {
         section = sourceObj.chapters[i].sections[j]
+
+        if (section.privateheader.included == false) {
+          continue;
+        }
 
         html += "  " + s.rpad(section.header.name, namePad - 2, " ")
         // Position in day isn't calculated for sections
