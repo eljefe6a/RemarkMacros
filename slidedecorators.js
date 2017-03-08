@@ -74,7 +74,7 @@ SlideDecorators.prototype.decorateSection = function(currentSlideSource, sourceO
       source = globalDecorators[i](source, sourceObj, section, params)
     }
 
-    return source + "---\n" + currentSlideSource
+    return source + "---\n"
   } else {
     return currentSlideSource
   }
