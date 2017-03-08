@@ -30,11 +30,18 @@ ImportModule.prototype.addModules = function(urlToAjax) {
     // Splice out the rest of the slides to be added to the new section
     extractedSection = section.slides.splice(slideindex, section.slides.length)
 
-    // Add the rest of slides to the new module section
-    moduleSections[moduleSections.length - 1].slides = moduleSections[moduleSections.length - 1].slides.concat(extractedSection)
-    
-    // Splice in the new module
-    chapter.sections = ImportModule.prototype.arraySplice(chapter.sections, moduleSections, sectionindex + 1)
+    if (moduleSections[0].header.name == "section" && moduleSections[0].privateheader.hidden == true) {
+      // Handle the case where the module is just some slides and not a new section
+      console.dir(sections.slides)
+      console.dir(moduleSections[0].slides)
+      section.slides = ImportModule.prototype.arraySplice(section.slides, moduleSections[0].slides, slideindex + 1)
+    } else {
+      // Add the rest of slides to the new module section
+      moduleSections[moduleSections.length - 1].slides = moduleSections[moduleSections.length - 1].slides.concat(extractedSection)
+
+      // Splice in the new module
+      chapter.sections = ImportModule.prototype.arraySplice(chapter.sections, moduleSections, sectionindex + 1)
+    }
   });
   
   ImportModule.prototype.callbackfunction(ImportModule.prototype.sourceObj)
