@@ -32,8 +32,6 @@ ImportModule.prototype.addModules = function(urlToAjax) {
 
     if (moduleSections[0].header.name == "section" && moduleSections[0].privateheader.hidden == true) {
       // Handle the case where the module is just some slides and not a new section
-      console.dir(sections.slides)
-      console.dir(moduleSections[0].slides)
       section.slides = ImportModule.prototype.arraySplice(section.slides, moduleSections[0].slides, slideindex + 1)
     } else {
       // Add the rest of slides to the new module section
