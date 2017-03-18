@@ -38,6 +38,9 @@ SourceObjToSource.prototype.finalizeSource = function(sourceObj, params, globalD
     }
   }
   
+  // There is a trailing "\n---\n" that needs to be removed
+  // Truncate it.
+  source = source.substring(0, source.length - 4)
   //console.log(source)
   return source
 }
