@@ -58,13 +58,16 @@ SlideDecorators.prototype.decorateSection = function(currentSlideSource, sourceO
     source += "<ul class=\"section-list\">"
 
     for (var i = 0; i < chapter.sections.length; i++) {
-      source += "<li"
+      // Verify section is included before adding to list
+      if (chapter.sections[i].privateheader.included == true) {
+        source += "<li"
 
-      if (chapter.sections.indexOf(section) == i) {
-        source += " class=\"selected-section\""
+        if (chapter.sections.indexOf(section) == i) {
+          source += " class=\"selected-section\""
+        }
+
+        source += ">" + chapter.sections[i].header.name + "</li>"
       }
-
-      source += ">" + chapter.sections[i].header.name + "</li>"
     }
 
     source += "</ul>\n"
