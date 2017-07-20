@@ -159,6 +159,12 @@ IncludeSource.prototype.getFileExtension = function(filename) {
   if (fileExtension == "hql") {
     // Change HQL's extension to SQL
     fileExtension = "sql"
+  } else if (fileExtension == "m") {
+    // Change M to Objective-C
+    fileExtension = "Objective-C"
+  } else if (fileExtension == "h") {
+    // Change h to Objective-C
+    fileExtension = "Objective-C"
   }
 
   return fileExtension
