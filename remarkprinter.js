@@ -39,16 +39,19 @@ launchChrome().then(async chrome => {
 
         console.log("Sleeping")
         var sleep = require('sleep-promise');
-        await sleep(10000);
+        await sleep(5000);
 
         console.log("Printing")
 
         const {data} = await Page.printToPDF({
             printBackground: true,
+            paperWidth: "897px",
+            paperHeight: "673px",
             marginTop: 0,
             marginBottom: 0,
             marginLeft: 0,
-            marginRight: 0
+            marginRight: 0,
+            pageRanges: 1-2
         });
 
         console.log("Writing")
