@@ -1,24 +1,32 @@
-// Requires chrome-launcher, sleep-promise, and chrome-remote-interface
+// Requires chrome-launcher, sleep-promise, minimist, and chrome-remote-interface
 
 const chromeLauncher = require('chrome-launcher');
 const CDP = require('chrome-remote-interface');
+var argv = require('minimist')(process.argv.slice(2));
 
-// Optional: set logging level of launcher to see its output.
-// Install it using: yarn add lighthouse-logger
-// const log = require('lighthouse-logger');
-// log.setLevel('info');
+if (!("filename" in argv)) {
+    showUsage("You must add the filename with --filename.");
+}
 
-/**
- * Launches a debugging instance of Chrome.
- * @param {boolean=} headless True (default) launches Chrome in headless mode.
- *     False launches a full version of Chrome.
- * @return {Promise<ChromeLauncher>}
- */
+if (!("ratio" in argv)) {
+    showUsage("You must add the ratio with --ratio.");
+}
+
+if (!("url" in argv)) {
+    showUsage("You must add the url with --url.");
+}
+
+function showUsage(missingParam) {
+    console.log(missingParam)
+    console.log("Usage: --filename pathtooutput --ratio [16x9|4x3] --url pageurl")
+    process.exit()
+}
+
+console.log("Writing to " + argv["filename"] + " from page " + argv["url"])
+
 function launchChrome(headless=true) {
   return chromeLauncher.launch({
-    // port: 9222, // Uncomment to force a specific port of your choice.
     chromeFlags: [
-      '--window-size=897,673',
       '--disable-gpu',
       headless ? '--headless' : ''
     ]
@@ -34,7 +42,7 @@ launchChrome().then(async chrome => {
     await Page.enable();
     try {
         await Page.enable();
-        await Page.navigate({url: 'http://localhost:8020/mobile/index.html'});
+        await Page.navigate({url: argv["url"]});
         await Page.loadEventFired();
 
         console.log("Sleeping")
@@ -43,21 +51,30 @@ launchChrome().then(async chrome => {
 
         console.log("Printing")
 
-        const {data} = await Page.printToPDF({
+        printOptions = {
             printBackground: true,
-            paperWidth: "897px",
-            paperHeight: "673px",
             marginTop: 0,
             marginBottom: 0,
             marginLeft: 0,
-            marginRight: 0,
-            pageRanges: 1-2
-        });
+            marginRight: 0
+        }
+
+        if (argv["ratio"] == "16x9") {
+            printOptions["paperWidth"] = 12.6
+            printOptions["paperHeight"] = 7.1
+        } else if (argv["ratio"] == "4x3") {
+            printOptions["paperWidth"] = 9.46
+            printOptions["paperHeight"] = 7.1
+        } else {
+            throw new Error("Unsupported ratio \"" + argv["ratio"] + "\"")
+        }
+
+        const {data} = await Page.printToPDF(printOptions);
 
         console.log("Writing")
 
         var fs = require('fs');
-        fs.writeFileSync('Couchbase_Mobile_Slides_CD257_chrome.pdf', Buffer.from(data, 'base64'));
+        fs.writeFileSync(argv["filename"], Buffer.from(data, 'base64'));
 
         console.log("Done writing")
         chrome.kill();
