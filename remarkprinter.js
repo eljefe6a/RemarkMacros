@@ -45,6 +45,7 @@ launchChrome().then(async chrome => {
         await Page.navigate({url: argv["url"]});
         await Page.loadEventFired();
 
+        // TODO: Change from hard coded sleep to wait on a completion event
         console.log("Sleeping")
         var sleep = require('sleep-promise');
         await sleep(5000);
@@ -68,6 +69,8 @@ launchChrome().then(async chrome => {
         } else {
             throw new Error("Unsupported ratio \"" + argv["ratio"] + "\"")
         }
+
+        // TODO: Add option for printing specific pages using pageRanges
 
         const {data} = await Page.printToPDF(printOptions);
 
