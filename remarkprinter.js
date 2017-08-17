@@ -27,7 +27,6 @@ console.log("Writing to " + argv["filename"] + " from page " + argv["url"])
 function launchChrome(headless=true) {
   return chromeLauncher.launch({
     chromeFlags: [
-      '--disable-gpu',
       headless ? '--headless' : ''
     ]
   });
@@ -38,8 +37,15 @@ launchChrome().then(async chrome => {
 
     // Extract the DevTools protocol domains we need and enable them.
     // See API docs: https://chromedevtools.github.io/devtools-protocol/
-    const {Page} = protocol;
-    await Page.enable();
+    const {Console, Page} = protocol;
+
+    await Promise.all([Console.enable(), Page.enable()]);
+
+    await Console.clearMessages();
+        Console.messageAdded((params) => {
+            console.log(params.message.text);
+        });
+
     try {
         await Page.enable();
         await Page.navigate({url: argv["url"]});
