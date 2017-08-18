@@ -46,7 +46,7 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
     slides = urlToAjax[SourceCreator.prototype.classJSON.classmodules[i].filename].responseText.split("\n---\n")
 
     for (var j = 0; j < slides.length; j++) {
-      slide = SourceCreator.prototype.parseSlide(slides[j])
+      slide = SourceCreator.prototype.parseSlide(slides[j], j)
 
       template = slide["header"]["template"]
       layout = slide["header"]["layout"]
@@ -90,13 +90,18 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
     SourceCreator.prototype.processIncludeAndExclude(currentChapter, SourceCreator.prototype.classJSON.classmodules[i])  
   }  
 
+  console.dir(sourceObj)
+
   SourceCreator.prototype.callbackfunction(sourceObj)
 }
 
-SourceCreator.prototype.parseSlide = function(slideText) {
+SourceCreator.prototype.parseSlide = function(slideText, slideNumber) {
   slide = {
     header: {},
-    privateheader: {"included": true},
+    privateheader: {"included": true,
+    // Slide number passed in is 0 based,
+    // Things are always done off of 1 based
+    "slidenumber": slideNumber + 1},
     contents: [],
     notes: ""
   }
@@ -146,24 +151,23 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
       // Add specifically included slides
       slidesToInclude = SourceCreator.prototype.mixrange(includeSlides)
 
-      currentSlideNumber = 0
+      // Check if the chapter slide is included
+      if (slidesToInclude.indexOf(chapter.privateheader.slidenumber) == -1) {
+        // If chapter isn't there, exclude it
+        chapter.sections[i].privateheader.included = false
+      }
 
       for (var i = 0; i < chapter.sections.length; i++) {
-        currentSlideNumber++
-        
-        // Array is 0 based but splits start at 1
-        if (slidesToInclude.indexOf(currentSlideNumber + 1) == -1) {
-          // Everything is included by default
+        // Check if section is included
+        if (slidesToInclude.indexOf(chapter.sections[i].privateheader.slidenumber) == -1) {
+          // If section isn't there, exclude it
           chapter.sections[i].privateheader.included = false
         }
 
         // Now go through slides
         for(var j = 0; j < chapter.sections[i].slides.length; j++) {
-          currentSlideNumber++
-        
-          // Array is 0 based but splits start at 1
-          if (slidesToInclude.indexOf(currentSlideNumber + 1) == -1) {
-            // Everything is included by default
+          if (slidesToInclude.indexOf(chapter.sections[i].slides[j].privateheader.slidenumber) == -1) {
+            // If slide isn't there, exclude it
             chapter.sections[i].slides[j].privateheader.included = false
           }
         }
@@ -175,24 +179,23 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
       // Split and add all
       slidesToExclude = SourceCreator.prototype.mixrange(excludeSlides)
 
-      currentSlideNumber = 0
+      // Check if the chapter slide is excluded
+      if (slidesToInclude.indexOf(chapter.privateheader.slidenumber) != -1) {
+        // If chapter is there, exclude it
+        chapter.sections[i].privateheader.included = false
+      }
 
       for (var i = 0; i < chapter.sections.length; i++) {
-        currentSlideNumber++
-
-        // Array is 0 based but splits start at 1
-        if (slidesToExclude.indexOf(currentSlideNumber + 1) != -1) {
-          // Everything is included by default
+        // Check if section is excluded
+        if (slidesToExclude.indexOf(chapter.sections[i].privateheader.slidenumber) != -1) {
+          // If section is there, exclude it
           chapter.sections[i].privateheader.included = false
         }
 
         // Now go through slides
         for(var j = 0; j < chapter.sections[i].slides.length; j++) {
-          currentSlideNumber++
-        
-          // Array is 0 based but splits start at 1
-          if (slidesToExclude.indexOf(currentSlideNumber + 1) != -1) {
-            // Everything is included by default
+          if (slidesToExclude.indexOf(chapter.sections[i].slides[j].privateheader.slidenumber) != -1) {
+            // If slide is there, exclude it
             chapter.sections[i].slides[j].privateheader.included = false
           }
         }
