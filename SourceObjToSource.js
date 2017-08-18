@@ -16,18 +16,16 @@ SourceObjToSource.prototype.finalizeSource = function(sourceObj, params, globalD
   }
 
   for (var chapterindex = 0; chapterindex < sourceObj.chapters.length; chapterindex++) {
-    if (sourceObj.chapters[chapterindex].privateheader.included == false) {
-      continue;
+    if (sourceObj.chapters[chapterindex].privateheader.included == true) {
+      // Include the chapter's slide
+      source += SourceObjToSource.prototype.processChapter(sourceObj, sourceObj.chapters[chapterindex], params, globalDecorators, chapterDecorators)
     }
 
-    source += SourceObjToSource.prototype.processChapter(sourceObj, sourceObj.chapters[chapterindex], params, globalDecorators, chapterDecorators)
-
     for (var sectionindex = 0; sectionindex < sourceObj.chapters[chapterindex].sections.length; sectionindex++) {
-      if (sourceObj.chapters[chapterindex].sections[sectionindex].privateheader.included == false) {
-        continue;
+      if (sourceObj.chapters[chapterindex].sections[sectionindex].privateheader.included == true) {
+        // Include the section's slide
+        source += SourceObjToSource.prototype.processSection(sourceObj, sourceObj.chapters[chapterindex], sourceObj.chapters[chapterindex].sections[sectionindex], params, globalDecorators, sectionDecorators);
       }
-
-      source += SourceObjToSource.prototype.processSection(sourceObj, sourceObj.chapters[chapterindex], sourceObj.chapters[chapterindex].sections[sectionindex], params, globalDecorators, sectionDecorators)
 
       for (var slideindex = 0; slideindex < sourceObj.chapters[chapterindex].sections[sectionindex].slides.length; slideindex++) {
         // Verify it is included
