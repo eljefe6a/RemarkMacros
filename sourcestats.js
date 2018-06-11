@@ -19,8 +19,8 @@ SourceStats.prototype.outputStats = function(sourceObj, params) {
     chapter.privateheader.chapterFinalMinutes = 0
     chapter.privateheader.chapterTotalMinutes = 0
 
-    for (var sectionindex = 0; sectionindex < sourceObj.chapters[chapterindex].sections.length; sectionindex++) {
-      section = sourceObj.chapters[chapterindex].sections[sectionindex]
+    for (var sectionindex = 0; sectionindex < chapter.sections.length; sectionindex++) {
+      section = chapter.sections[sectionindex]
 
       if (section.privateheader.included == false) {
         continue;
@@ -30,9 +30,11 @@ SourceStats.prototype.outputStats = function(sourceObj, params) {
       section.privateheader.demoMinutes = 0
       section.privateheader.exerciseMinutes = 0
       section.privateheader.finalMinutes = 0
+      section.privateheader.totalSlideTime = 0
+      section.privateheader.totalMinutes = 0
 
-      for (var slideindex = 0; slideindex < sourceObj.chapters[chapterindex].sections[sectionindex].slides.length; slideindex++) {
-        slide = sourceObj.chapters[chapterindex].sections[sectionindex].slides[slideindex]
+      for (var slideindex = 0; slideindex < section.slides.length; slideindex++) {
+        slide = section.slides[slideindex]
         
         if (slide.privateheader.included == true) {
           template = slide.header.template
