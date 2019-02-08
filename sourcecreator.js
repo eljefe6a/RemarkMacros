@@ -154,7 +154,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
       // Check if the chapter slide is included
       if (slidesToInclude.indexOf(chapter.privateheader.slidenumber) == -1) {
         // If chapter isn't there, exclude it
-        chapter.sections[i].privateheader.included = false
+        chapter.privateheader.included = false
       }
 
       for (var i = 0; i < chapter.sections.length; i++) {
@@ -182,7 +182,7 @@ SourceCreator.prototype.processIncludeAndExclude = function(chapter, moduleInfo)
       // Check if the chapter slide is excluded
       if (slidesToInclude.indexOf(chapter.privateheader.slidenumber) != -1) {
         // If chapter is there, exclude it
-        chapter.sections[i].privateheader.included = false
+        chapter.privateheader.included = false
       }
 
       for (var i = 0; i < chapter.sections.length; i++) {
