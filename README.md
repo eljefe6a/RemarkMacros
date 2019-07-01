@@ -32,7 +32,8 @@ The Include Source macro allows you to import code from a file in a project with
 Here is the JavaScript code:
 
 ```javascript
-var includeSourceMacro = new IncludeSourceMacro();
+var includeSource = new IncludeSource();
+includeSource.importSources(sourceObj, callbackfunction)
 ```
 
 Here is how to use it in the Markdown:
