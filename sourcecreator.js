@@ -54,7 +54,8 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
       if (layout == "true") {
         // A layout/header slide
         sourceObj.headers.push(slide)
-      } else if (template == "title" || template == "titlewithsubtitle" || template == "chapter") {
+      } else if (template == "title" || template == "chapter"
+        || template.startsWith("title-") ) {
         currentChapter = slide
 
         // Put slide at root
