@@ -55,7 +55,7 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
         // A layout/header slide
         sourceObj.headers.push(slide)
       } else if (template == "title" || template == "chapter"
-        || template.startsWith("title-") ) {
+        || template.startsWith("title-")) {
         currentChapter = slide
 
         // Put slide at root
@@ -98,7 +98,7 @@ SourceCreator.prototype.createSourceObj = function(urlToAjax) {
 
 SourceCreator.prototype.parseSlide = function(slideText, slideNumber) {
   slide = {
-    header: {},
+    header: {template: "unknown"},
     privateheader: {"included": true,
     // Slide number passed in is 0 based,
     // Things are always done off of 1 based
