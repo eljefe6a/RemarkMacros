@@ -4,7 +4,7 @@ var SourceObjToSource = function () {
 };
 
 // The final step in the callback hell. Adds modules.
-SourceObjToSource.prototype.finalizeSource = function(sourceObj, params, globalDecorators, chapterDecorators, sectionDecorators, slideDecorators) {
+SourceObjToSource.prototype.finalizeSource = function(sourceObj, params, initialCreator, headerDecorators, globalDecorators, chapterDecorators, sectionDecorators, slideDecorators) {
   var source = ""
 
   for (var headerindex = 0; headerindex < sourceObj.headers.length; headerindex++) {
@@ -12,25 +12,27 @@ SourceObjToSource.prototype.finalizeSource = function(sourceObj, params, globalD
       continue;
     }
 
-    source += SourceObjToSource.prototype.processHeader(sourceObj.headers[headerindex])
+    for (var i = 0; i < headerDecorators.length; i++) {
+      source = headerDecorators[i](sourceObj.headers[headerindex])
+    }
   }
 
   for (var chapterindex = 0; chapterindex < sourceObj.chapters.length; chapterindex++) {
     if (sourceObj.chapters[chapterindex].privateheader.included == true) {
       // Include the chapter's slide
-      source += SourceObjToSource.prototype.processChapter(sourceObj, sourceObj.chapters[chapterindex], params, globalDecorators, chapterDecorators)
+      source += SourceObjToSource.prototype.processChapter(sourceObj, sourceObj.chapters[chapterindex], params, initialCreator, globalDecorators, chapterDecorators)
     }
 
     for (var sectionindex = 0; sectionindex < sourceObj.chapters[chapterindex].sections.length; sectionindex++) {
       if (sourceObj.chapters[chapterindex].sections[sectionindex].privateheader.included == true) {
         // Include the section's slide
-        source += SourceObjToSource.prototype.processSection(sourceObj, sourceObj.chapters[chapterindex], sourceObj.chapters[chapterindex].sections[sectionindex], params, globalDecorators, sectionDecorators);
+        source += SourceObjToSource.prototype.processSection(sourceObj, sourceObj.chapters[chapterindex], sourceObj.chapters[chapterindex].sections[sectionindex], params, initialCreator, globalDecorators, sectionDecorators);
       }
 
       for (var slideindex = 0; slideindex < sourceObj.chapters[chapterindex].sections[sectionindex].slides.length; slideindex++) {
         // Verify it is included
         if (sourceObj.chapters[chapterindex].sections[sectionindex].slides[slideindex].privateheader.included == true) {
-          source += SourceObjToSource.prototype.processSlide(sourceObj, sourceObj.chapters[chapterindex], sourceObj.chapters[chapterindex].sections[sectionindex], sourceObj.chapters[chapterindex].sections[sectionindex].slides[slideindex], params, globalDecorators, slideDecorators)
+          source += SourceObjToSource.prototype.processSlide(sourceObj, sourceObj.chapters[chapterindex], sourceObj.chapters[chapterindex].sections[sectionindex], sourceObj.chapters[chapterindex].sections[sectionindex].slides[slideindex], params, initialCreator, globalDecorators, slideDecorators)
         }
       }
     }
@@ -43,17 +45,13 @@ SourceObjToSource.prototype.finalizeSource = function(sourceObj, params, globalD
   return source
 }
 
-SourceObjToSource.prototype.processHeader = function(header, params) {
-  return SourceObjToSource.prototype.simpleSlide(header, params)
-}
-
-SourceObjToSource.prototype.processChapter = function(sourceObj, chapter, params, globalDecorators, chapterDecorators) {
+SourceObjToSource.prototype.processChapter = function(sourceObj, chapter, params, initialCreator, globalDecorators, chapterDecorators) {
   if (chapter.privateheader.hidden == true) {
     // Never output hidden chapters
     return ""
   }
 
-  slideSource = SourceObjToSource.prototype.simpleSlide(chapter, params)
+  slideSource = initialCreator(chapter, params)
 
   for (var i = 0; i < globalDecorators.length; i++) {
     slideSource = globalDecorators[i](slideSource, sourceObj, chapter, params)
@@ -66,13 +64,13 @@ SourceObjToSource.prototype.processChapter = function(sourceObj, chapter, params
   return slideSource
 }
 
-SourceObjToSource.prototype.processSection = function(sourceObj, chapter, section, params, globalDecorators, sectionDecorators) {
+SourceObjToSource.prototype.processSection = function(sourceObj, chapter, section, params, initialCreator, globalDecorators, sectionDecorators) {
   if (section.privateheader.hidden == true) {
     // Never output hidden sections
     return ""
   }
 
-  slideSource = SourceObjToSource.prototype.simpleSlide(section, params)
+  slideSource = initialCreator(section, params)
 
   for (var i = 0; i < globalDecorators.length; i++) {
     slideSource = globalDecorators[i](slideSource, sourceObj, section, params)
@@ -85,13 +83,13 @@ SourceObjToSource.prototype.processSection = function(sourceObj, chapter, sectio
   return slideSource
 }
 
-SourceObjToSource.prototype.processSlide = function(sourceObj, chapter, section, slide, params, globalDecorators, slideDecorators) {
+SourceObjToSource.prototype.processSlide = function(sourceObj, chapter, section, slide, params, initialCreator, globalDecorators, slideDecorators) {
   if (slide.privateheader.hidden == true) {
     // Never output hidden slides
     return ""
   }
 
-  slideSource = SourceObjToSource.prototype.simpleSlide(slide, params)
+  slideSource = initialCreator(slide, params)
 
   for (var i = 0; i < globalDecorators.length; i++) {
     slideSource = globalDecorators[i](slideSource, sourceObj, slide, params)
@@ -102,21 +100,4 @@ SourceObjToSource.prototype.processSlide = function(sourceObj, chapter, section,
   }
 
   return slideSource
-}
-
-SourceObjToSource.prototype.simpleSlide = function(slide, params) {
-  slideText = ""
-
-  for(var key in slide.header) {
-    slideText += key + ": " + slide.header[key];
-    slideText += "\n"
-  }
-
-  for (var contextindex = 0; contextindex < slide.contents.length; contextindex++) {
-    slideText += slide.contents[contextindex];
-    slideText += "\n"
-  }
-
-  slideText += "\n---\n"
-  return slideText
 }

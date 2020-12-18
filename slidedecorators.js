@@ -3,6 +3,10 @@ var SlideDecorators = function () {
   console.log("Started SlideDecorators")
 };
 
+SlideDecorators.prototype.decorateHeader = function(header) {
+  return SourceObjToSource.prototype.processHeader(header)
+}
+
 SlideDecorators.prototype.decorateChapterList = function(currentSlideSource, sourceObj, chapter, globalDecorators, params) {
   if (params.showChapters == true && chapter.header.template != "title") {
     // Output chapter list
@@ -97,4 +101,21 @@ SlideDecorators.prototype.globalCopyrightDecorator = function(currentSlideSource
   // Prepend version number
   source = "copyright: " + params["copyright"] + "\n" + currentSlideSource
   return source
+}
+
+SlideDecorators.prototype.simpleSlide = function(slide, params) {
+  slideText = ""
+
+  for(var key in slide.header) {
+    slideText += key + ": " + slide.header[key];
+    slideText += "\n"
+  }
+
+  for (var contextindex = 0; contextindex < slide.contents.length; contextindex++) {
+    slideText += slide.contents[contextindex];
+    slideText += "\n"
+  }
+
+  slideText += "\n---\n"
+  return slideText
 }
