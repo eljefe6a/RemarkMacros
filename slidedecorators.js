@@ -4,7 +4,7 @@ var SlideDecorators = function () {
 };
 
 SlideDecorators.prototype.decorateHeader = function(header) {
-  return SourceObjToSource.prototype.processHeader(header)
+  return SlideDecorators.prototype.simpleSlide(header)
 }
 
 SlideDecorators.prototype.decorateChapterList = function(currentSlideSource, sourceObj, chapter, globalDecorators, params) {
@@ -103,7 +103,7 @@ SlideDecorators.prototype.globalCopyrightDecorator = function(currentSlideSource
   return source
 }
 
-SlideDecorators.prototype.simpleSlide = function(slide, params) {
+SlideDecorators.prototype.simpleSlide = function(slide) {
   slideText = ""
 
   for(var key in slide.header) {
