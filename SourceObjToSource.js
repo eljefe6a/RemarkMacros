@@ -13,7 +13,7 @@ SourceObjToSource.prototype.finalizeSource = function(sourceObj, params, initial
     }
 
     for (var i = 0; i < headerDecorators.length; i++) {
-      source = headerDecorators[i](sourceObj.headers[headerindex])
+      source += headerDecorators[i](sourceObj.headers[headerindex])
     }
   }
 
